@@ -1,0 +1,22 @@
+{
+  "name": "sadhana-mythri-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --open",
+    "build": "vite build",
+    "preview": "vite preview",
+    "format": "prettier --write src vite.config.js index.html package.json"
+  },
+  "dependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-router-dom": "^7.18.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.0.3",
+    "prettier": "^3.6.2",
+    "vite": "8.1.5"
+  }
+}
