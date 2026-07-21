@@ -402,7 +402,8 @@ a {
   left: 14%;
   right: 11%;
   bottom: 74px;
-  height: 168px;
+  height: 190px;
+  z-index: 1;
 }
 
 .desk::before {
@@ -410,10 +411,11 @@ a {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 40px;
-  height: 20px;
-  background: linear-gradient(180deg, #d09c5e, #ae7d44);
-  border-radius: 2px;
+  bottom: 52px;
+  height: 17px;
+  background: linear-gradient(180deg, #d9aa70, #9e6335);
+  border-radius: 3px 3px 1px 1px;
+  box-shadow: 0 7px 10px rgba(73, 43, 22, 0.18);
 }
 
 .desk::after {
@@ -422,8 +424,22 @@ a {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 52px;
-  background: linear-gradient(180deg, #c79154, #996437);
+  height: 54px;
+  background: linear-gradient(90deg, #a86c3c, #d29a5d 18%, #bd7b43 64%, #92582f);
+  clip-path: polygon(0 0, 100% 0, 97% 100%, 4% 100%);
+  box-shadow: inset 0 9px 16px rgba(255, 231, 182, 0.12);
+}
+
+.desk-shadow {
+  position: absolute;
+  z-index: -1;
+  left: 5%;
+  right: 4%;
+  bottom: 37px;
+  height: 23px;
+  border-radius: 50%;
+  background: rgba(77, 52, 31, 0.19);
+  filter: blur(12px);
 }
 
 .rack {
@@ -445,20 +461,32 @@ a {
 .monitor {
   position: absolute;
   left: 50%;
-  bottom: 57px;
+  z-index: 2;
+  bottom: 69px;
   width: 120px;
   height: 78px;
   transform: translateX(-50%);
-  background: linear-gradient(180deg, #f7f4ee, #ebe5d8);
-  border: 4px solid #33473d;
-  border-bottom-width: 7px;
-  border-radius: 5px;
+  background: linear-gradient(135deg, #fdfaf3, #e3ecdf);
+  border: 5px solid #253e35;
+  border-bottom-width: 8px;
+  border-radius: 7px;
   display: grid;
   place-items: center;
   font-family: "Cormorant Garamond", serif;
   color: var(--deep);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 0.9;
+  box-shadow: 0 7px 0 #1d312a, 0 11px 12px rgba(30, 48, 38, 0.16);
+}
+
+.monitor-glow {
+  position: absolute;
+  inset: 7px 9px auto auto;
+  width: 24px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.58);
+  filter: blur(3px);
 }
 
 .monitor span:last-child {
@@ -466,14 +494,37 @@ a {
   letter-spacing: 1px;
 }
 
+.monitor-stand {
+  position: absolute;
+  z-index: 1;
+  left: calc(50% - 8px);
+  bottom: 52px;
+  width: 16px;
+  height: 19px;
+  background: #263f35;
+  border-radius: 0 0 3px 3px;
+}
+
+.monitor-stand::after {
+  content: "";
+  position: absolute;
+  left: -20px;
+  bottom: -3px;
+  width: 56px;
+  height: 6px;
+  border-radius: 50%;
+  background: #263f35;
+}
+
 .lamp {
   position: absolute;
-  right: 35px;
-  bottom: 50px;
-  width: 92px;
-  height: 92px;
-  border-left: 7px solid #3b5046;
-  border-bottom: 7px solid #3b5046;
+  z-index: 3;
+  right: 28px;
+  bottom: 61px;
+  width: 86px;
+  height: 88px;
+  border-left: 6px solid #30483d;
+  border-bottom: 6px solid #30483d;
   border-radius: 2px 0 0 20px;
   transform: skewX(-25deg);
 }
@@ -487,6 +538,17 @@ a {
   height: 18px;
   border-radius: 50% 50% 8px 8px;
   background: linear-gradient(180deg, #3f5d50, #1f3c31);
+  transform: skewX(25deg);
+}
+
+.lamp i {
+  position: absolute;
+  right: -15px;
+  bottom: -11px;
+  width: 52px;
+  height: 8px;
+  border-radius: 50%;
+  background: #30483d;
   transform: skewX(25deg);
 }
 
@@ -513,36 +575,32 @@ a {
   background: #385b4a;
 }
 
-.plant.large {
+.plant {
   position: absolute;
-  right: -2px;
-  bottom: 12px;
-  width: 118px;
-  height: 140px;
-  border-radius: 54px 54px 28px 28px;
-  background: linear-gradient(180deg, #82a26f 0 20%, #2d5c46 20% 100%);
-  clip-path: polygon(50% 0, 62% 12%, 74% 5%, 78% 18%, 90% 12%, 96% 28%, 84% 36%, 92% 54%, 76% 54%, 72% 71%, 59% 61%, 50% 78%, 41% 61%, 28% 71%, 24% 54%, 8% 54%, 16% 36%, 4% 28%, 10% 12%, 22% 18%, 26% 5%, 38% 12%);
+  z-index: 4;
+  width: 132px;
+  height: 180px;
 }
 
-.plant.pot {
-  position: absolute;
-  right: 10px;
-  bottom: -2px;
-  width: 78px;
-  height: 58px;
-  background: linear-gradient(180deg, #eddcc0, #d3b48b);
-  border-radius: 0 0 30px 30px;
-  clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
+.plant-left {
+  left: 0;
+  bottom: 50px;
+  width: 132px;
+  height: 162px;
 }
 
-.plant.pot::before {
-  content: "";
-  position: absolute;
-  inset: -15px 10px auto;
-  height: 15px;
-  border-radius: 50%;
-  background: rgba(180, 155, 119, 0.4);
-  filter: blur(4px);
+.plant-right {
+  right: 5px;
+  bottom: 50px;
+}
+
+.plant-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 12px 14px rgba(40, 60, 44, 0.16));
 }
 
 .floating-card,

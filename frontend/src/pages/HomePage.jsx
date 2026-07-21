@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import plantImage from "../plant.png";
 
 const features = [
   {
@@ -209,19 +210,20 @@ export default function HomePage() {
             <div className="window-panel" />
             <div className="cityline" />
             <div className="desk">
-              <div className="rack">
-                <span />
-                <span />
-                <span />
+              <div className="desk-shadow" />
+              <div className="plant plant-left">
+                <img className="plant-image" src={plantImage} alt="" />
               </div>
               <div className="monitor">
+                <i className="monitor-glow" />
                 <span>SADHANA</span>
                 <span>MYTHRI</span>
               </div>
-              <div className="lamp" />
-              {/* <div className="chair" /> */}
-              {/* <div className="plant large" /> */}
-              <div className="plant pot" />
+              <div className="monitor-stand" />
+              {/* <div className="lamp"><i /></div> */}
+              <div className="plant plant-right">
+                <img className="plant-image" src={plantImage} alt="" />
+              </div>
             </div>
             <div className="address-bubble">
               <div className="building">🏙</div>
@@ -229,7 +231,7 @@ export default function HomePage() {
                 <strong>Your Business Address</strong>
                 <span>TBD</span>
               </div>
-              <div className="floating-card floating-bottom-left">
+              <div className="floating-card floating-mid-left">
             <span className="mini-icon">📬</span>
             <div>
               <strong>Mail & Document</strong>
