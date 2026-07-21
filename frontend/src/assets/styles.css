@@ -128,8 +128,8 @@ a {
 
 /* Header */
 .site-header {
-  height: 56px;
-  padding: 0 7.2vw;
+  min-height: 92px;
+  padding: 10px 7.2vw 12px;
   display: grid;
   grid-template-columns: 1fr auto auto;
   align-items: center;
@@ -141,12 +141,24 @@ a {
   top: 0;
   z-index: 10;
 }
-
-.brand {
-  font-weight: 800;
+/* main heading name */
+/* .brand {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  font-weight: 900;
   letter-spacing: 1.5px;
   color: var(--ink);
-  font-size: 18px;
+  font-size: 30px;
+  line-height: 1;
+} */
+/* main logo image */
+.brand-logo {
+  display: block;
+  width: 200px;
+  height: 150px;
+  object-fit: contain;
 }
 
 .main-nav {
@@ -1453,6 +1465,7 @@ a {
   .site-header {
     grid-template-columns: 1fr auto;
     height: auto;
+    min-height: auto;
     padding: 14px 5vw;
   }
 
@@ -1495,11 +1508,17 @@ a {
   .site-header {
     grid-template-columns: 1fr;
     gap: 12px;
+    min-height: auto;
+    padding: 14px 5vw;
   }
 
   .header-actions {
     justify-self: stretch;
     justify-content: space-between;
+  }
+
+  .brand-logo {
+    width: 64px;
   }
 
   .hero {

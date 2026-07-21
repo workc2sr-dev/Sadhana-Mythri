@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import plantImage from "../plant.png";
+import logoImage from "../Elevanta Spaces Logo.png?v=2";
 
 const features = [
   {
@@ -125,10 +126,9 @@ export default function HomePage() {
 
   return (
     <main className="landing">
-      <header className="site-header">
-        <a className="brand" href="#home">
-          SADHANA MYTHRI
-        </a>
+      <header className="site-header"> 
+           <img className="brand-logo" src={logoImage} alt="" />
+        
 
         <nav className="main-nav" aria-label="Primary">
           <a href="#solutions" onClick={() => scrollToSection("solutions")}>
@@ -298,7 +298,7 @@ export default function HomePage() {
               </ul>
               <button
                 className={plan.featured ? "primary-btn" : "secondary-btn"}
-                onClick={() => choosePlan(plan)}
+                onClick={() => navigate(`/dashboard?plan=${plan.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`)}
               >
                 Subscribe Now
               </button>
@@ -349,7 +349,7 @@ export default function HomePage() {
             Join 1,000+ businesses who trust Sadhana Mythri for their virtual
             office needs.
           </p>
-          <button className="light-btn" onClick={() => choosePlan(plans[1])}>
+          <button className="light-btn" onClick={() => navigate("/plans")}>
             Get Started Today <span>→</span>
           </button>
         </div>
