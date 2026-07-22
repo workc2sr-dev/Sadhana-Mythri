@@ -1,98 +1,46 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import PortalLayout from "../layouts/PortalLayout";
 import { useAuth } from "../hooks/useAuth";
+import { api } from "../services/api";
+
+const planCatalog = {
+  essential: { name: "Starter Plan", price: 1999 },
+  business: { name: "Growth Plan", price: 2999 },
+  enterprise: { name: "Enterprise Plan", price: 5999 },
+};
 
 export default function Dashboard() {
-  const [tab, setTab] = useState("Overview");
+  const [tab, setTab] = useState("Dashboard");
+  const [applications, setApplications] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
-  const planFromState = location.state?.plan;
+  const { user, logout, isAuthenticated } = useAuth();
   const planFromQuery = searchParams.get("plan");
-  const planCatalog = {
-    "starter-plan": { name: "Starter Plan", price: 999 },
-    "growth-plan": { name: "Growth Plan", price: 1999 },
-    "enterprise-plan": { name: "Enterprise Plan", price: 4999 },
+  const plan = location.state?.plan || (planFromQuery ? planCatalog[planFromQuery] : null);
+  const initials = user?.full_name?.split(" ").map((name) => name[0]).join("").slice(0, 2).toUpperCase() || "SM";
+
+  useEffect(() => {
+    if (!isAuthenticated) { navigate("/auth", { replace: true }); return; }
+    if (sessionStorage.getItem("sadhana_otp_verified") !== "true") {
+      navigate(planFromQuery ? `/otp?plan=${planFromQuery}` : "/otp", { replace: true });
+      return;
+    }
+    api.getSubscriptions().then(setApplications).catch(() => setApplications([]));
+  }, [isAuthenticated, navigate, planFromQuery]);
+
+  const signOut = () => {
+    logout();
+    sessionStorage.removeItem("sadhana_otp_verified");
+    navigate("/");
   };
-  const initials =
-    user?.full_name
-      ?.split(" ")
-      .map((name) => name[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "SM";
 
-  const plan =
-    planFromState ||
-    (planFromQuery ? planCatalog[planFromQuery] || null : null);
-
-  const planPrice =
-    typeof plan?.price === "number" ? plan.price : Number.parseInt("0", 10);
-
-  return (
-    <PortalLayout
-      activeTab={tab}
-      onTabChange={setTab}
-      onBack={() => navigate("/")}
-    >
-      <div className="welcome">
-        <div>
-          <p className="eyebrow">WELCOME BACK</p>
-          <h1>Manage your business presence.</h1>
-        </div>
-        <div className="avatar">{initials}</div>
-      </div>
-
-      {tab === "Overview" ? (
-        <>
-          <div className="status-card">
-            <div>
-              <p className="eyebrow">ACCOUNT STATUS</p>
-              <h2>Complete verification to activate your address.</h2>
-              <p>
-                We need a few documents before your virtual office is ready to
-                use.
-              </p>
-            </div>
-            <button onClick={() => navigate("/verification")}>
-              Start verification →
-            </button>
-          </div>
-
-          <div className="dashboard-grid">
-            <article>
-              <p>SELECTED PLAN</p>
-              <h3>{plan?.name || "No plan selected"}</h3>
-              <span>
-                {plan
-                  ? `₹${planPrice.toLocaleString("en-IN")} / month`
-                  : "Explore plans to get started"}
-              </span>
-            </article>
-            <article>
-              <p>VIRTUAL ADDRESS</p>
-              <h3>Pending activation</h3>
-              <span>Available after verification</span>
-            </article>
-            <article>
-              <p>NEXT INVOICE</p>
-              <h3>—</h3>
-              <span>Subscribe to view billing</span>
-            </article>
-          </div>
-        </>
-      ) : (
-        <div className="empty-panel">
-          <p className="eyebrow">{tab.toUpperCase()}</p>
-          <h2>{tab} management</h2>
-          <p>
-            This area is ready to connect to the API as you add your account and
-            subscription data.
-          </p>
-        </div>
-      )}
-    </PortalLayout>
-  );
+  return <PortalLayout activeTab={tab} onTabChange={setTab} onBack={() => navigate("/")} onLogout={signOut}>
+    <div className="welcome"><div><p className="eyebrow">WELCOME BACK</p><h1>Manage your applications.</h1></div><div className="avatar">{initials}</div></div>
+    {tab === "Dashboard" && <><div className="status-card"><div><p className="eyebrow">ACCOUNT STATUS</p><h2>Your account is ready.</h2><p>Your applications are sent for review and updates will appear here.</p></div><button onClick={() => setTab("My Applications")}>View applications</button></div><div className="dashboard-grid"><article><p>SELECTED PLAN</p><h3>{plan?.name || "No plan selected"}</h3><span>{plan ? `₹${plan.price.toLocaleString("en-IN")} / year` : "Explore plans to get started"}</span></article><article><p>APPLICATIONS</p><h3>{applications.length}</h3><span>View application progress</span></article><article><p>NOTIFICATIONS</p><h3>0</h3><span>No new updates</span></article></div></>}
+    {tab === "My Profile" && <div className="empty-panel"><p className="eyebrow">MY PROFILE</p><h2>{user?.full_name}</h2><p>{user?.email}</p><p>Keep your contact details up to date for application updates.</p></div>}
+    {tab === "My Applications" && <div className="empty-panel"><p className="eyebrow">MY APPLICATIONS</p><h2>Application status</h2>{applications.length ? <div className="application-list">{applications.map((application) => <p key={application.id}><strong>{planCatalog[application.plan_id]?.name || application.plan_id}</strong><span>{application.status.replaceAll("_", " ")}</span></p>)}</div> : <p>No applications yet. Select a plan from the website to get started.</p>}<p className="status-legend">Submitted · Under review · Approved · Rejected</p></div>}
+    {tab === "Notifications" && <div className="empty-panel"><p className="eyebrow">NOTIFICATIONS</p><h2>You’re all caught up.</h2><p>Updates about application decisions will appear here.</p></div>}
+  </PortalLayout>;
 }

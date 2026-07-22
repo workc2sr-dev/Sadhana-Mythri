@@ -19,9 +19,9 @@ export default function FaqPage() {
           ],
           list: [
             "Select a plan",
-            "Complete registration details",
-            "Upload required documents",
-            "Wait for verification and activation",
+            "Create an account or log in",
+            "Confirm the on-screen OTP",
+            "Track your application in the dashboard",
           ],
         },
         {
@@ -35,7 +35,7 @@ export default function FaqPage() {
         {
           heading: "How do I get started?",
           body: [
-            "Simply choose a suitable plan, complete the registration and verification process, make the payment, and we'll guide you through the remaining steps.",
+            "Simply choose a suitable plan, create an account, confirm the on-screen OTP, and track your application from the dashboard.",
           ],
         },
         {
@@ -57,21 +57,15 @@ export default function FaqPage() {
           ],
         },*/
         {
-          heading: "What documents are required to get started?",
+          heading: "How does account confirmation work?",
           body: [
-            "You'll typically need government-issued identity proof, address proof, and any additional documents required for verification based on your selected plan.",
-          ],
-        },
-        {
-          heading: "How does the verification process work?",
-          body: [
-            "Our team will check the ID proofs you submitted. Once they are verified, you can start using the services included in your chosen plan.",
+            "After signup or login, enter the OTP shown on screen. An SMS or email OTP provider can be connected later.",
           ],
         },
         {
           heading: "How long does activation take?",
           body: [
-            "Activation time depends on successful document verification. Most applications are processed within a few business days.",
+            "Applications are placed under review after you select a plan. Processing time depends on the plan and submitted business details.",
           ],
         },
         {
@@ -113,7 +107,7 @@ export default function FaqPage() {
         {
           heading: "Do you provide customer support?",
           body: [
-            "Yes. Our support team is available 24/7 to assist you with onboarding, verification, subscriptions, and general queries.",
+            "Yes. Our support team is available 24/7 to assist you with onboarding, subscriptions, and general queries.",
           ],
         },
         

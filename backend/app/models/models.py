@@ -27,7 +27,7 @@ class Subscription(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     plan_id: Mapped[str] = mapped_column(ForeignKey("plans.id"))
-    status: Mapped[str] = mapped_column(String(30), default="pending_verification")
+    status: Mapped[str] = mapped_column(String(30), default="under_review")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 

@@ -8,7 +8,7 @@ from app.auth.security import (
     verify_password,
 )
 from app.database.connection import get_db
-from app.models.models import Invoice, Plan, Subscription, User, Verification
+from app.models.models import Invoice, Plan, Subscription, User
 from app.schemas.schemas import (
     LoginRequest,
     PlanResponse,
@@ -16,11 +16,21 @@ from app.schemas.schemas import (
     SubscriptionCreate,
     SubscriptionResponse,
     UserResponse,
-    VerificationCreate,
 )
-from app.services.seed import ensure_plans
+from app.services.seed import ensure_admin, ensure_plans
 
 router = APIRouter()
+
+
+@router.on_event("startup")
+def seed_admin():
+    # The database session dependency is not available during application startup.
+    from app.database.connection import SessionLocal
+    db = SessionLocal()
+    try:
+        ensure_admin(db)
+    finally:
+        db.close()
 
 
 @router.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -72,41 +82,11 @@ def create_subscription(
     if not db.get(Plan, payload.plan_id):
         raise HTTPException(404, "Plan not found")
 
-    subscription = Subscription(user_id=user.id, plan_id=payload.plan_id)
+    subscription = Subscription(user_id=user.id, plan_id=payload.plan_id, status="under_review")
     db.add(subscription)
     db.commit()
     db.refresh(subscription)
     return subscription
-
-
-@router.get("/verification")
-def get_verification(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return db.query(Verification).filter(Verification.user_id == user.id).first() or {
-        "status": "not_started"
-    }
-
-
-@router.post("/verification")
-def submit_verification(
-    payload: VerificationCreate,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    verification = db.query(Verification).filter(Verification.user_id == user.id).first()
-    if not verification:
-        verification = Verification(
-            user_id=user.id,
-            document_type=payload.document_type,
-            status="submitted",
-        )
-        db.add(verification)
-    else:
-        verification.document_type = payload.document_type
-        verification.status = "submitted"
-
-    db.commit()
-    db.refresh(verification)
-    return verification
 
 
 @router.get("/invoices")

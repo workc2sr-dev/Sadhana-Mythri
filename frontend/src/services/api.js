@@ -32,11 +32,5 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ plan_id }),
     }),
-  getVerification: () => request("/verification"),
-  submitVerification: (document_type) =>
-    request("/verification", {
-      method: "POST",
-      body: JSON.stringify({ document_type }),
-    }),
   getInvoices: () => request("/invoices"),
 };

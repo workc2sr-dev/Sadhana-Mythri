@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-export default function InfoPage({ title, intro, sections, backLabel = "Back to home", backTo = "/" }) {
+export default function InfoPage({ title, intro, sections, children, backLabel = "Back to home", backTo = "/" }) {
   const navigate = useNavigate();
 
   return (
@@ -34,6 +34,7 @@ export default function InfoPage({ title, intro, sections, backLabel = "Back to 
             </article>
           ))}
         </div>
+        {children ? <div className="page-actions">{children}</div> : null}
       </section>
     </main>
   );
