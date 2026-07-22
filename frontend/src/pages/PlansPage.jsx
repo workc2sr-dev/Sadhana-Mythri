@@ -2,9 +2,10 @@ import { useNavigate } from "react-router-dom";
 
 const plans = [
   {
+    id: "essential",
     name: "Starter Plan",
     note: "For freelancers",
-    price: 999,
+    price: 2999,
     items: [
       "Official Business Address",
       "Mail & Document Handling",
@@ -12,9 +13,10 @@ const plans = [
     ],
   },
   {
+    id: "business",
     name: "Growth Plan",
     note: "For startups",
-    price: 1999,
+    price: 4999,
     items: [
       "Official Business Address",
       "Mail & Document Handling",
@@ -24,9 +26,10 @@ const plans = [
     featured: true,
   },
   {
+    id: "enterprise",
     name: "Enterprise Plan",
     note: "For established businesses",
-    price: 4999,
+    price: 6999,
     items: [
       "Official Business Address",
       "Mail & Document Handling",
@@ -76,7 +79,7 @@ export default function PlansPage() {
               </ul>
               <button
                 className={plan.featured ? "primary-btn" : "secondary-btn"}
-                onClick={() => navigate("/dashboard", { state: { plan } })}
+                onClick={() => navigate(`/auth?plan=${plan.id}`)}
               >
                 Continue <span>→</span>
               </button>

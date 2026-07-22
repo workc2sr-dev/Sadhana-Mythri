@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { api } from "../services/api";
 import plantImage from "../plant.png";
 import logoImage from "../Elevanta Spaces Logo.png?v=2";
 
@@ -25,22 +27,22 @@ const features = [
 const steps = [
   {
     n: "1",
-    id: "browse-select-plan",
-    title: <strong>Browse & Select a Plan</strong>,
-    text: "Pick the plan that suits your business requirements.",
+    id: "login/signup",
+    title: <strong>Login / Signup</strong>,
+    text: "Login or create an account with your Gmail and a password to get started with your virtual office address.",
   },
-  {
+  /*{
     n: "2",
     title: <strong>Register & Verify</strong>,
     text: "Complete your details and verify online in minutes.",
-  },
+  },*/
   {
-    n: "3",
+    n: "2",
     title: <strong>Subscription Approval</strong>,
     text: "We verify your details and activate your plan.",
   },
   {
-    n: "4",
+    n: "3",
     title: <strong>Start Using Your Virtual Office Address</strong>,
     text: "Use your address for business registration and grow confidently.",
   },
@@ -48,43 +50,42 @@ const steps = [
 
 const plans = [
   {
-    name: <strong>Starter Plan</strong>,
+    id: "essential",
+    name: "Starter Plan",
     note: "For freelancers",
-    price: 1999,
-    items: [
-      "Official Business Address",
-      "Mail & Document Handling",
-      "Standard Support",
-    ],
-  },
-  {
-    name: <strong>Growth Plan</strong>,
-    note: "For startups",
     price: 2999,
     items: [
       "Official Business Address",
       "Mail & Document Handling",
-      "Priority Support",
-      "Dashboard Access",
+    ],
+  },
+  {
+    id: "business",
+    name: "Growth Plan",
+    note: "For startups",
+    price: 4999,
+    items: [
+      "Official Business Address",
+      "Mail & Document Handling",
+      "1 physical working space, access to 2-wheeler parking",
     ],
     featured: true,
   },
   {
-    name: <strong>Enterprise Plan</strong>,
-    note: "For established businesses",
-    id: "enterprise-plan",
-    price: 5999,
+    name: "Enterprise Plan",
+    note: "For growing businesses",
+    id: "enterprise",
+    price: 6999,
     items: [
       "Official Business Address",
       "Mail & Document Handling",
-      "Priority Support",
-      "Dashboard Access",
-      "Custom Requirements",
+      "2 physical working spaces",
+      "access to infra like printer, conference room, reserved 2-wheeler parking ",
     ],
   },
 ];
 
-const testimonials = [
+/*const testimonials = [
   {
     quote:
       '"Sadhana Mythri made it incredibly easy to set up my business address. The entire process was smooth and super professional."',
@@ -97,7 +98,7 @@ const testimonials = [
     name: "Anita Verma",
     role: "Co-founder, BrightWorks",
   },
-];
+];*/
 
 function CheckItem({ children }) {
   return (
@@ -111,24 +112,34 @@ function CheckItem({ children }) {
 export default function HomePage() {
   const [notice, setNotice] = useState("");
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const choosePlan = (plan) => {
-    setNotice(`${plan.name.props.children} selected. Create your account to continue.`);
-    const slug = plan.name.props.children.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    navigate(`/dashboard?plan=${slug}`, {
+  const choosePlan = async (plan) => {
+    setNotice(`${plan.name} selected.`);
+    if (isAuthenticated) {
+      try {
+        await api.createSubscription(plan.id);
+      } catch (error) {
+        setNotice(error.message);
+        return;
+      }
+    }
+    navigate(isAuthenticated ? `/dashboard?plan=${plan.id}` : `/auth?plan=${plan.id}`, {
       state: { plan },
     });
   };
 
   return (
     <main className="landing">
-      <header className="site-header"> 
-           <img className="brand-logo" src={logoImage} alt="" />
-        
+      <header className="site-header">
+        <a className="brand-block" href="#home" onClick={() => scrollToSection("home")}>
+          <img className="brand-logo" src={logoImage} alt="Sadhana Mythri" />
+          <p className="brand-tagline"><strong>Where Ambition Finds Its Space</strong></p>
+        </a>
 
         <nav className="main-nav" aria-label="Primary">
           <a href="#solutions" onClick={() => scrollToSection("solutions")}>
@@ -152,7 +163,7 @@ export default function HomePage() {
           <a className="phone-pill" href="tel:+919632587410">
             <span>☎</span> +91 96325 87410
           </a>
-          <button className="login-btn" onClick={() => navigate("/dashboard")}>
+          <button className="login-btn" onClick={() => navigate("/auth")}>
             Client Login
           </button>
         </div>
@@ -183,11 +194,11 @@ export default function HomePage() {
             </button>
           </div>
 
-          <div className="trust-row">
+      {/*<div className="trust-row">
             <span>🛡 GST Compliant</span>
             <span>🔒 Secure & Private</span>
             <span>🎧 24x7 Support</span>
-          </div>
+          </div> */}
         </div>
 
         <div className="hero-right" aria-hidden="true">
@@ -215,10 +226,11 @@ export default function HomePage() {
                 <img className="plant-image" src={plantImage} alt="" />
               </div>
               <div className="monitor">
-                <i className="monitor-glow" />
-                <span>SADHANA</span>
-                <span>MYTHRI</span>
-              </div>
+                {/* <i className="monitor-glow" /> */}
+                <span><strong>A SADHANA</strong></span>
+                <span><strong>MYTHRI</strong></span>
+                <span><strong>PRODUCT</strong></span>
+               </div>
               <div className="monitor-stand" />
               {/* <div className="lamp"><i /></div> */}
               <div className="plant plant-right">
@@ -270,7 +282,7 @@ export default function HomePage() {
                 <h3>{step.title}</h3>
                 <p>{step.text}</p>
               </div>
-              <div className="step-line" aria-hidden="true" />
+              <div className="step-line" aria-hidden="false" />
             </article>
           ))}
         </div>
@@ -284,12 +296,12 @@ export default function HomePage() {
               className={`plan-card ${plan.featured ? "featured" : ""}`}
             >
               {plan.featured && <span className="popular">MOST POPULAR</span>}
-              <h3>{plan.name}</h3>
+              <h3><strong>{plan.name}</strong></h3>
               <p className="plan-note">{plan.note}</p>
               <p className="plan-price">
                 <span>₹</span>
                 {plan.price.toLocaleString("en-IN")}
-                <small> /Year</small>
+                <small> /month (subscribed annually)</small>
               </p>
               <ul>
                 {plan.items.map((item) => (
@@ -298,7 +310,7 @@ export default function HomePage() {
               </ul>
               <button
                 className={plan.featured ? "primary-btn" : "secondary-btn"}
-                onClick={() => navigate(`/dashboard?plan=${plan.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`)}
+                onClick={() => choosePlan(plan)}
               >
                 Subscribe Now
               </button>
@@ -357,23 +369,30 @@ export default function HomePage() {
       </section>
 
       <footer className="site-footer" id="contact">
+        <div className="footer-main">
         <div className="footer-brand">
           <strong>SADHANA MYTHRI</strong>
           <p>
-            Your trusted partner for virtual office solutions and business
-            compliance.
+          follow us on social media for updates and offers.
           </p>
           <div className="social-row">
-            <span>f</span>
-            <span>in</span>
-            <span>ig</span>
-            <span>tw</span>
+              <ul><li><span>f</span></li></ul>
+              <ul><li><span>in</span></li></ul>
+              <ul><li><span>ig</span></li></ul>
+              <ul><li><span>X</span></li></ul>
           </div>
         </div>
+        <div className="footer-links">
         <div className="footer-col">
-          <h4>Company</h4>
+          {/*<h4>Company</h4>
           <button type="button" onClick={() => navigate("/careers")}>
-            Careers
+           <li>Careers</li>
+          </button>
+          <button type="button" onClick={() => navigate("/mission-vision")}>
+            <li>Mission & Vision</li>
+          </button>
+          <button type="button" onClick={() => navigate("/documentation")}>
+            <li>Documentation</li>
           </button>
           <button type="button" onClick={() => navigate("/faq")}>
             FAQ
@@ -383,56 +402,71 @@ export default function HomePage() {
           </button>
           <button type="button" onClick={() => navigate("/privacy")}>
             Privacy Policy
-          </button>
+          </button>*/}
         </div>
-        <div className="footer-col">
+       {/* <div className="footer-col">
           <h4>Solutions</h4>
           <a href="#features">Virtual Office Address</a>
           <a href="#features">Mail Handling</a>
           <a href="#features">Compliance Support</a>
           <a href="#features">Document Management</a>
-        </div>
+        </div> */}
         <div className="footer-col">
           <h4>Plans</h4>
-          <a href="#plans">All Plans</a>
-          <a href="#plans">Pricing</a>
-          <button type="button" onClick={() => navigate("/faq")}>
-            FAQs
-          </button>
+          <a href="#plans"><li>All Plans</li></a>
+          <a href="#plans"><li>Pricing</li></a>
+
         </div>
         <div className="footer-col">
           <h4>Legal</h4>
           <button type="button" onClick={() => navigate("/terms")}>
-            Terms & Conditions
+            <li>Terms & Conditions</li>
           </button>
           <button type="button" onClick={() => navigate("/privacy")}>
-            Privacy Policy
+            <li>Privacy Policy</li>
           </button>
           <button type="button" onClick={() => navigate("/refunds")}>
-            Refund Policy
+            <li>Refund Policy</li>
+          </button>
+          <button type="button" onClick={() => navigate("/faq")}>
+            <li>FAQs</li>
+          </button>
+          <button type="button" onClick={() => navigate("/documentation")}>
+            <li>Documentation</li>
           </button>
         </div>
-        <div className="footer-newsletter">
+        </div>
+        </div>
+       {/* <div className="footer-newsletter">
           <h4>Stay Connected</h4>
           <p>Subscribe to get updates and offers.</p>
           <div className="newsletter-row">
             <input type="email" placeholder="Enter your email" />
-            <button className="login-btn" onClick={() => scrollToSection("contact")}>
+            <button className="login-btn" onClick={() => navigate("/plans")}>
               Subscribe
             </button>
           </div>
-        </div>
+        </div>*/}
         <div className="footer-contact">
           <p>Contact Us:</p>
-          <a href="tel:+919876543210">+91-9632587410</a>
-          <span>||</span>
-          <a href="mailto:info@sadhanamythri.com">info@sadhanamythri.com</a>
+          <div className="footer-contact-line">
+            <a href="tel:+919876543210">+91-9632587410</a>
+            <span className="footer-divider" aria-hidden="true">||</span>
+            <a href="mailto:info@sadhanamythri.com">info@sadhanamythri.com</a>
+          </div>
         </div>
-        <div className="footer-note">© 2026 Sadhana Mythri. All rights reserved.</div>
-    {/* <div className="footer-made">Made with ♥ in India</div> */}
+        <div className="footer-note"><b>© 2026 Sadhana Mythri. All rights reserved. All content, trademarks, logos, software, and materials on this website are the exclusive property of Sadhana Mythri and may not be reproduced, distributed, or used without prior written permission.</b></div>
+        <div className="footer-made">Made with ♥ in India</div>
       </footer>
 
-      <button className="chat-bubble" aria-label="Open chat">
+      <button className="chat-bubble"
+       type="button" 
+       aria-label="Open support chat" 
+       title="Click here to chat with our virtual assistance" 
+       onClick={() => navigate("/support-chat")}
+       
+
+       >
         💬
       </button>
 
