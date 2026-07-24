@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 export default function OtpPage() {
   const [searchParams] = useSearchParams();
@@ -8,7 +9,8 @@ export default function OtpPage() {
   const [value, setValue] = useState("");
   const [error, setError] = useState("");
   const planId = searchParams.get("plan");
-  const dashboardPath = planId ? `/dashboard?plan=${planId}` : "/dashboard";
+  const { user } = useAuth();
+  const dashboardPath = user?.is_admin ? "/admin" : planId ? `/payment?plan=${planId}` : "/dashboard";
 
   useEffect(() => { sessionStorage.setItem("sadhana_otp", otp); }, [otp]);
 

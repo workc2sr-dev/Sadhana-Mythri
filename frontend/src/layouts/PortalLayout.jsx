@@ -1,5 +1,8 @@
 export default function PortalLayout({ activeTab, onTabChange, onBack, onLogout, children }) {
   const tabs = ["Dashboard", "My Profile", "My Applications", "Notifications"];
+  const confirmLogout = () => {
+    if (window.confirm("Are you sure you want to log out?")) onLogout();
+  };
 
   return (
     <div className="dashboard">
@@ -10,7 +13,7 @@ export default function PortalLayout({ activeTab, onTabChange, onBack, onLogout,
           <button key={tab} className={activeTab === tab ? "active" : ""} onClick={() => onTabChange(tab)}>{tab}</button>
         ))}
         <button className="back" onClick={onBack}>Back to website</button>
-        <button className="back" onClick={onLogout}>Logout</button>
+        <button className="back" onClick={confirmLogout}>Logout</button>
       </aside>
       <section className="dashboard-main">{children}</section>
     </div>

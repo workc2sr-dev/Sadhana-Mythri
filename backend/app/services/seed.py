@@ -4,15 +4,16 @@ from app.models.models import Plan, User
 from app.utils.config import settings
 
 DEFAULT_PLANS = [
-    ("essential", "Essential", 999, 0),
-    ("business", "Business", 1999, 2),
-    ("enterprise", "Enterprise", 3999, 8),
+    ("essential", "Starter Plan", 2999, 0),
+    ("business", "Growth Plan", 4999, 2),
+    ("enterprise", "Enterprise Plan", 6999, 8),
 ]
 
 
 def ensure_plans(db: Session):
     for plan_id, name, price, days in DEFAULT_PLANS:
-        if not db.get(Plan, plan_id):
+        plan = db.get(Plan, plan_id)
+        if not plan:
             db.add(
                 Plan(
                     id=plan_id,
@@ -21,6 +22,10 @@ def ensure_plans(db: Session):
                     workspace_days=days,
                 )
             )
+        else:
+            plan.name = name
+            plan.price = price
+            plan.workspace_days = days
 
     db.commit()
 

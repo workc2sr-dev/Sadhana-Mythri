@@ -33,4 +33,5 @@ export const api = {
       body: JSON.stringify({ plan_id }),
     }),
   getInvoices: () => request("/invoices"),
+  getAdminUsers: () => request("/admin/users"),
 };

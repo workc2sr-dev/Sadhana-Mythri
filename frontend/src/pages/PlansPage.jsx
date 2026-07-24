@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
+import { monthlyPlanPrices } from "../utils/pricing";
 
 const plans = [
   {
     id: "essential",
     name: "Starter Plan",
     note: "For freelancers",
-    price: 2999,
+    price: monthlyPlanPrices.essential,
     items: [
       "Official Business Address",
       "Mail & Document Handling",
@@ -16,7 +17,7 @@ const plans = [
     id: "business",
     name: "Growth Plan",
     note: "For startups",
-    price: 4999,
+    price: monthlyPlanPrices.business,
     items: [
       "Official Business Address",
       "Mail & Document Handling",
@@ -29,7 +30,7 @@ const plans = [
     id: "enterprise",
     name: "Enterprise Plan",
     note: "For established businesses",
-    price: 6999,
+    price: monthlyPlanPrices.enterprise,
     items: [
       "Official Business Address",
       "Mail & Document Handling",
@@ -55,7 +56,7 @@ export default function PlansPage() {
             Back to home
           </button>
         </div>
-        <div className="plans-column">
+        <div className="plans-page-grid">
           {plans.map((plan) => (
             <article
               key={plan.name}
@@ -67,7 +68,7 @@ export default function PlansPage() {
               <p className="plan-price">
                 <span>₹</span>
                 {plan.price.toLocaleString("en-IN")}
-                <small> /Month</small>
+                <small>/month <p>(billed annually)</p></small>
               </p>
               <ul>
                 {plan.items.map((item) => (

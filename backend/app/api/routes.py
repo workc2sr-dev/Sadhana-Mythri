@@ -1,7 +1,10 @@
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.auth.security import (
     create_token,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
     get_admin_user,
     get_current_user,
     hash_password,
@@ -23,12 +26,13 @@ router = APIRouter()
 
 
 @router.on_event("startup")
-def seed_admin():
+def seed_initial_data():
     # The database session dependency is not available during application startup.
     from app.database.connection import SessionLocal
     db = SessionLocal()
     try:
         ensure_admin(db)
+        ensure_plans(db)
     finally:
         db.close()
 
@@ -55,9 +59,11 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(401, "Incorrect email or password")
 
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     return {
-        "access_token": create_token(user.id),
+        "access_token": create_token(user.id, expires_at),
         "token_type": "bearer",
+        "expires_at": int(expires_at.timestamp()),
         "user": UserResponse.model_validate(user),
     }
 
@@ -79,6 +85,9 @@ def create_subscription(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # A subscription can be the first API request a newly signed-in user makes.
+    # Ensure the built-in plan catalogue exists before validating the selection.
+    ensure_plans(db)
     if not db.get(Plan, payload.plan_id):
         raise HTTPException(404, "Plan not found")
 
@@ -96,4 +105,6 @@ def invoices(user: User = Depends(get_current_user), db: Session = Depends(get_d
 
 @router.get("/admin/users", response_model=list[UserResponse])
 def admin_users(_: User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    return db.query(User).all()
+    # Ignore incomplete legacy records so the administrative directory only
+    # returns accounts that can be safely represented to the client.
+    return db.query(User).filter(User.email != "").all()

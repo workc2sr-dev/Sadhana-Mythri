@@ -11,6 +11,7 @@ from app.utils.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = settings.secret_key
 ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 20
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
@@ -22,10 +23,13 @@ def verify_password(password: str, hashed: str) -> bool:
     return pwd_context.verify(password, hashed)
 
 
-def create_token(user_id: int) -> str:
+def create_token(user_id: int, expires_at: datetime | None = None) -> str:
+    expires_at = expires_at or (
+        datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     payload = {
         "sub": str(user_id),
-        "exp": datetime.now(timezone.utc) + timedelta(days=7),
+        "exp": expires_at,
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
