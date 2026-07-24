@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { api } from "../services/api";
+import { monthlyPlanPrices } from "../utils/pricing";
 import plantImage from "../plant.png";
 import logoImage from "../Elevanta Spaces Logo.png?v=2";
 
@@ -53,7 +53,7 @@ const plans = [
     id: "essential",
     name: "Starter Plan",
     note: "For freelancers",
-    price: 2999,
+    price: monthlyPlanPrices.essential,
     items: [
       "Official Business Address",
       "Mail & Document Handling",
@@ -63,7 +63,7 @@ const plans = [
     id: "business",
     name: "Growth Plan",
     note: "For startups",
-    price: 4999,
+    price: monthlyPlanPrices.business,
     items: [
       "Official Business Address",
       "Mail & Document Handling",
@@ -75,7 +75,7 @@ const plans = [
     name: "Enterprise Plan",
     note: "For growing businesses",
     id: "enterprise",
-    price: 6999,
+    price: monthlyPlanPrices.enterprise,
     items: [
       "Official Business Address",
       "Mail & Document Handling",
@@ -120,15 +120,10 @@ export default function HomePage() {
 
   const choosePlan = async (plan) => {
     setNotice(`${plan.name} selected.`);
-    if (isAuthenticated) {
-      try {
-        await api.createSubscription(plan.id);
-      } catch (error) {
-        setNotice(error.message);
-        return;
-      }
-    }
-    navigate(isAuthenticated ? `/dashboard?plan=${plan.id}` : `/auth?plan=${plan.id}`, {
+    const paymentPath = sessionStorage.getItem("sadhana_otp_verified") === "true"
+      ? `/payment?plan=${plan.id}`
+      : `/otp?plan=${plan.id}`;
+    navigate(isAuthenticated ? paymentPath : `/auth?plan=${plan.id}`, {
       state: { plan },
     });
   };
@@ -145,7 +140,7 @@ export default function HomePage() {
           <a href="#solutions" onClick={() => scrollToSection("solutions")}>
             Solutions <span>⌄</span>
           </a>
-          <a href="#plans" onClick={() => scrollToSection("plans")}>
+          <a href="#plans" onClick={() => navigate("/plans")}>
             Plans
           </a>
           <a href="#features" onClick={() => scrollToSection("features")}>
@@ -164,7 +159,10 @@ export default function HomePage() {
             <span>☎</span> +91 96325 87410
           </a>
           <button className="login-btn" onClick={() => navigate("/auth")}>
-            Client Login
+            Login
+          </button>
+          <button className="signup-btn" onClick={() => navigate("/auth")}>
+            Sign Up
           </button>
         </div>
       </header>
@@ -301,7 +299,7 @@ export default function HomePage() {
               <p className="plan-price">
                 <span>₹</span>
                 {plan.price.toLocaleString("en-IN")}
-                <small> /month (subscribed annually)</small>
+                <small> /month (billed annually)</small>
               </p>
               <ul>
                 {plan.items.map((item) => (
@@ -413,7 +411,7 @@ export default function HomePage() {
         </div> */}
         <div className="footer-col">
           <h4>Plans</h4>
-          <a href="#plans"><li>All Plans</li></a>
+          <a href="#plans" onClick={() => navigate("/plans")}><li>All Plans</li></a>
           <a href="#plans"><li>Pricing</li></a>
 
         </div>
@@ -459,16 +457,15 @@ export default function HomePage() {
         <div className="footer-made">Made with ♥ in India</div>
       </footer>
 
-      <button className="chat-bubble"
-       type="button" 
-       aria-label="Open support chat" 
-       title="Click here to chat with our virtual assistance" 
-       onClick={() => navigate("/support-chat")}
-       
-
-       >
-        💬
-      </button>
+      <div title="Click here to chat with our virtual assistance">
+        <button className="chat-bubble"
+         type="button" 
+         aria-label="Open support chat" 
+         onClick={() => navigate("/support-chat")}
+        >
+          💬
+        </button>
+      </div>
 
       {notice && (
         <div className="toast">
