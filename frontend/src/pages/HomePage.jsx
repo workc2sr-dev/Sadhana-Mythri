@@ -27,7 +27,6 @@ const features = [
 const steps = [
   {
     n: "1",
-    id: "login/signup",
     title: <strong>Login / Signup</strong>,
     text: "Login or create an account with your Gmail and a password to get started with your virtual office address.",
   },
@@ -43,7 +42,7 @@ const steps = [
   },
   {
     n: "3",
-    title: <strong>Start Using Your Virtual Office Address</strong>,
+    title: <strong>Your Virtual Office Address</strong>,
     text: "Use your address for business registration and grow confidently.",
   },
 ];
@@ -80,7 +79,7 @@ const plans = [
       "Official Business Address",
       "Mail & Document Handling",
       "2 physical working spaces",
-      "access to infra like printer, conference room, reserved 2-wheeler parking ",
+      "access to printer, conference room, reserved 2-wheeler parking ",
     ],
   },
 ];
