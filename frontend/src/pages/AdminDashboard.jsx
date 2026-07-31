@@ -29,6 +29,7 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState("Overview");
   const [users, setUsers] = useState([]);
   const [plans, setPlans] = useState([]);
+  const [verifications, setVerifications] = useState([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
@@ -42,10 +43,11 @@ export default function AdminDashboard() {
       navigate("/dashboard", { replace: true });
       return;
     }
-    Promise.all([api.getAdminUsers(), api.getPlans()])
-      .then(([adminUsers, catalog]) => {
+    Promise.all([api.getAdminUsers(), api.getPlans(), api.getAdminVerifications()])
+      .then(([adminUsers, catalog, kycVerifications]) => {
         setUsers(adminUsers);
         setPlans(catalog);
+        setVerifications(kycVerifications);
       })
       .catch((requestError) => setError(requestError.message));
   }, [isAuthenticated, navigate, user?.is_admin]);
@@ -53,6 +55,26 @@ export default function AdminDashboard() {
   const signOut = () => {
     logout();
     navigate("/", { replace: true });
+  };
+
+  const reviewVerification = async (verificationId, reviewStatus) => {
+    setError("");
+    try {
+      const updated = await api.reviewVerification(verificationId, reviewStatus);
+      setVerifications((current) => current.map((verification) => verification.id === updated.id ? { ...verification, ...updated } : verification));
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  };
+
+  const viewVerification = async (verificationId) => {
+    setError("");
+    try {
+      const document = await api.getVerificationDocument(verificationId);
+      window.open(URL.createObjectURL(document), "_blank", "noopener,noreferrer");
+    } catch (requestError) {
+      setError(requestError.message);
+    }
   };
 
   const content = () => {
@@ -71,6 +93,8 @@ export default function AdminDashboard() {
     if (tab === "Users") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">USERS</p><h2>Account directory</h2></div><span>{number(users.length)} accounts</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>{users.map((account) => <tr key={account.id}><td>{account.full_name}</td><td>{account.email}</td><td><span className={`role-chip ${account.is_admin ? "role-admin" : ""}`}>{account.is_admin ? "Administrator" : "User"}</span></td></tr>)}</tbody></table></div>}</section>;
 
     if (tab === "Plans") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">PLANS</p><h2>Service catalogue</h2></div></div><div className="admin-plan-grid">{plans.map((plan) => <article key={plan.id}><p>{plan.id}</p><h3>{plan.name}</h3><strong>₹{number(plan.price)}</strong><span>{plan.workspace_days} workspace days</span></article>)}</div></section>;
+
+    if (tab === "Documents") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">KYC DOCUMENTS</p><h2>Government ID reviews</h2></div><span>{number(verifications.filter((verification) => verification.status === "pending").length)} pending</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>User</th><th>Government ID</th><th>Status</th><th>Decision</th></tr></thead><tbody>{verifications.length ? verifications.map((verification) => <tr key={verification.id}><td><strong>{verification.user_name}</strong><br /><span>{verification.user_email}</span></td><td>{verification.document_type}<br /><span>{verification.document_name}</span><button className="text-btn" onClick={() => viewVerification(verification.id)}>View ID</button></td><td><span className={`kyc-status kyc-${verification.status}`}>{verification.status}</span></td><td>{verification.status === "pending" ? <div className="review-actions"><button className="primary-btn" onClick={() => reviewVerification(verification.id, "approved")}>Accept</button><button className="secondary-btn" onClick={() => reviewVerification(verification.id, "declined")}>Decline</button></div> : "Reviewed"}</td></tr>) : <tr><td colSpan="4">No government IDs have been submitted.</td></tr>}</tbody></table></div>}</section>;
 
     if (tab === "Subscriptions") return <section className="admin-card"><p className="eyebrow">SUBSCRIPTIONS</p><h2>Subscription operations</h2><p className="admin-module-copy">Subscription review and status management will appear here once the administrative subscription API is connected.</p></section>;
 

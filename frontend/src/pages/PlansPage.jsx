@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import { monthlyPlanPrices } from "../utils/pricing";
+import { api } from "../services/api";
 
 const plans = [
   {
@@ -43,6 +45,25 @@ const plans = [
 
 export default function PlansPage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  const choosePlan = async (planId) => {
+    if (isAuthenticated) {
+      try {
+        const subscriptions = await api.getSubscriptions();
+        const hasActivePlan = subscriptions.some((subscription) =>
+          ["under_review", "approved", "active"].includes(subscription.status),
+        );
+        if (hasActivePlan) {
+          navigate("/dashboard?notice=one-plan");
+          return;
+        }
+      } catch {
+        // The payment endpoint still enforces the one-plan rule if this check cannot load.
+      }
+    }
+    navigate(isAuthenticated ? `/dashboard/plans?plan=${planId}` : `/auth?plan=${planId}`);
+  };
 
   return (
     <main className="landing">
@@ -80,7 +101,7 @@ export default function PlansPage() {
               </ul>
               <button
                 className={plan.featured ? "primary-btn" : "secondary-btn"}
-                onClick={() => navigate(`/auth?plan=${plan.id}`)}
+                onClick={() => choosePlan(plan.id)}
               >
                 Continue <span>→</span>
               </button>

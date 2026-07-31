@@ -37,6 +37,10 @@ export default function PaymentPage() {
       await api.createSubscription(planId);
       navigate(`/dashboard?plan=${planId}`, { replace: true });
     } catch (requestError) {
+      if (requestError.message === "One plan per account") {
+        navigate("/dashboard?notice=one-plan", { replace: true });
+        return;
+      }
       setError(requestError.message);
     } finally {
       setBusy(false);

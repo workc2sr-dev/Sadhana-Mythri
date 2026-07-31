@@ -9,8 +9,9 @@ export default function OtpPage() {
   const [value, setValue] = useState("");
   const [error, setError] = useState("");
   const planId = searchParams.get("plan");
+  const notice = searchParams.get("notice");
   const { user } = useAuth();
-  const dashboardPath = user?.is_admin ? "/admin" : planId ? `/payment?plan=${planId}` : "/dashboard";
+  const dashboardPath = user?.is_admin ? "/admin" : planId ? `/dashboard/plans?plan=${planId}` : notice ? `/dashboard?notice=${notice}` : "/dashboard";
 
   useEffect(() => { sessionStorage.setItem("sadhana_otp", otp); }, [otp]);
 

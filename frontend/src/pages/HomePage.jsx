@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { api } from "../services/api";
 import { monthlyPlanPrices } from "../utils/pricing";
 import plantImage from "../plant.png";
 import logoImage from "../Elevanta Spaces Logo.png?v=2";
@@ -27,7 +28,6 @@ const features = [
 const steps = [
   {
     n: "1",
-    id: "login/signup",
     title: <strong>Login / Signup</strong>,
     text: "Login or create an account with your Gmail and a password to get started with your virtual office address.",
   },
@@ -43,7 +43,7 @@ const steps = [
   },
   {
     n: "3",
-    title: <strong>Start Using Your Virtual Office Address</strong>,
+    title: <strong>Your Virtual Office Address</strong>,
     text: "Use your address for business registration and grow confidently.",
   },
 ];
@@ -80,7 +80,7 @@ const plans = [
       "Official Business Address",
       "Mail & Document Handling",
       "2 physical working spaces",
-      "access to infra like printer, conference room, reserved 2-wheeler parking ",
+      "access to printer, conference room, reserved 2-wheeler parking ",
     ],
   },
 ];
@@ -120,8 +120,22 @@ export default function HomePage() {
 
   const choosePlan = async (plan) => {
     setNotice(`${plan.name} selected.`);
+    if (isAuthenticated) {
+      try {
+        const subscriptions = await api.getSubscriptions();
+        const hasActivePlan = subscriptions.some((subscription) =>
+          ["under_review", "approved", "active"].includes(subscription.status),
+        );
+        if (hasActivePlan) {
+          navigate("/dashboard?notice=one-plan");
+          return;
+        }
+      } catch {
+        // The payment endpoint still enforces the one-plan rule if this check cannot load.
+      }
+    }
     const paymentPath = sessionStorage.getItem("sadhana_otp_verified") === "true"
-      ? `/payment?plan=${plan.id}`
+      ? `/dashboard/plans?plan=${plan.id}`
       : `/otp?plan=${plan.id}`;
     navigate(isAuthenticated ? paymentPath : `/auth?plan=${plan.id}`, {
       state: { plan },
@@ -200,20 +214,20 @@ export default function HomePage() {
         </div>
 
         <div className="hero-right" aria-hidden="true">
-          <div className="floating-card floating-top-left">
+          {/*<div className="floating-card floating-top-left">
             <span className="mini-icon">🏢</span>
             <div>
               <strong>Professional</strong>
               <span>Address</span>
             </div>
-          </div>
-          <div className="floating-card floating-bottom-left">
+          </div>*/}
+          {/*<div className="floating-card floating-bottom-left">
             <span className="mini-icon">🔐</span>
             <div>
               <strong>Privacy</strong>
               <span>Assured</span>
             </div>
-          </div>
+          </div>*/}
 
           <div className="scene">
             <div className="window-panel" />
@@ -235,23 +249,23 @@ export default function HomePage() {
                 <img className="plant-image" src={plantImage} alt="" />
               </div>
             </div>
-            <div className="address-bubble">
-              <div className="building">🏙</div>
-              <div>
+             {/* <div className="address-bubble"> 
+               <div className="building">🏙</div> 
+               <div>
                 <strong>Your Business Address</strong>
                 <span>TBD</span>
-              </div>
-              <div className="floating-card floating-mid-left">
-            <span className="mini-icon">📬</span>
-            <div>
+              </div> 
+             <div className="floating-card floating-mid-left">
+             <span className="mini-icon">📬</span> 
+             <div>
               <strong>Mail & Document</strong>
               <span>Management</span>
-            </div>
+            </div> 
           </div>
-            {/* <div className="ok">✓</div>*/}
-            </div>
-            {/* <div className="pin">📍</div> */}
-          </div>
+             <div className="ok">✓</div>
+             </div> */}
+            {/*  <div className="pin">📍</div> */}
+          </div>  
 
           {/* <div className="side-plant left" /> */}
           {/* <div className="side-plant right" /> */}
@@ -374,10 +388,10 @@ export default function HomePage() {
           follow us on social media for updates and offers.
           </p>
           <div className="social-row">
-              <ul><li><span>f</span></li></ul>
-              <ul><li><span>in</span></li></ul>
-              <ul><li><span>ig</span></li></ul>
-              <ul><li><span>X</span></li></ul>
+              <ul><span>f</span></ul>
+              <ul><span>in</span></ul>
+              <ul><span>ig</span></ul>
+              <ul><span>X</span></ul>
           </div>
         </div>
         <div className="footer-links">
