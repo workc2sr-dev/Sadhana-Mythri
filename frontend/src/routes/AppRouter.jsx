@@ -14,6 +14,10 @@ import DocumentationPage from "../pages/Documentation";
 import SupportChatPage from "../pages/SupportChatPage";
 import AdminDashboard from "../pages/AdminDashboard";
 import PaymentPage from "../pages/PaymentPage";
+import ProfilePage from "../pages/ProfilePage";
+import ApplicationsPage from "../pages/ApplicationsPage";
+import NotificationsPage from "../pages/NotificationsPage";
+import DashboardPlansPage from "../pages/DashboardPlansPage";
 
 export default function AppRouter() {
   return (
@@ -23,6 +27,10 @@ export default function AppRouter() {
         <Route path="/plans" element={<PlansPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/profile" element={<ProfilePage />} />
+        <Route path="/dashboard/applications" element={<ApplicationsPage />} />
+        <Route path="/dashboard/plans" element={<DashboardPlansPage />} />
+        <Route path="/dashboard/notifications" element={<NotificationsPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/otp" element={<OtpPage />} />

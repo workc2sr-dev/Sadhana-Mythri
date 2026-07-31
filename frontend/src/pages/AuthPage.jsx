@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { api } from "../services/api";
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login");
@@ -20,6 +21,16 @@ export default function AuthPage() {
       if (mode === "register") await register(form);
       const signedInUser = await login({ email: form.email, password: form.password });
       sessionStorage.removeItem("sadhana_otp_verified");
+      if (planId && !signedInUser.is_admin) {
+        const subscriptions = await api.getSubscriptions();
+        const hasActivePlan = subscriptions.some((subscription) =>
+          ["under_review", "approved", "active"].includes(subscription.status),
+        );
+        if (hasActivePlan) {
+          navigate("/otp?notice=one-plan");
+          return;
+        }
+      }
       navigate(signedInUser.is_admin ? "/otp" : planId ? `/otp?plan=${planId}` : "/otp");
     } catch (err) {
       setError(err.message);

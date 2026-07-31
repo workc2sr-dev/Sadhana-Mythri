@@ -49,3 +49,25 @@ class SubscriptionResponse(BaseModel):
 
 class VerificationCreate(BaseModel):
     document_type: str
+
+
+class VerificationResponse(BaseModel):
+    id: int | None = None
+    document_type: str | None = None
+    document_name: str | None = None
+    status: str
+    created_at: datetime | None = None
+    reviewed_at: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class VerificationReview(BaseModel):
+    status: str = Field(pattern="^(approved|declined)$")
+
+
+class AdminVerificationResponse(VerificationResponse):
+    user_id: int
+    user_name: str
+    user_email: EmailStr

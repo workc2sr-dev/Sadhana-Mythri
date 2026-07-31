@@ -37,6 +37,10 @@ class Verification(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
     status: Mapped[str] = mapped_column(String(30), default="not_started")
     document_type: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    document_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    document_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class Invoice(Base):

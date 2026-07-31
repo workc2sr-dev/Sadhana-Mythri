@@ -12,24 +12,31 @@ function getReply(message) {
   if (text.includes("plan") || text.includes("price") || text.includes("pricing")) {
     return "You can compare our available plans and pricing on the Plans page.";
   }
+
   if (text.includes("payment") || text.includes("invoice")) {
     return "For payment or invoice help, please share your registered email with our support team.";
   }
+
   if (text.includes("address") || text.includes("gst") || text.includes("registration")) {
     return "Our team can guide you through virtual office, GST, and business-registration requirements.";
   }
-  if( text.includes("document") || text.includes("verification") || text.includes("upload")) {
+
+  if (text.includes("document") || text.includes("verification") || text.includes("upload")) {
     return "For document upload or verification assistance, please contact our support team with your registered email.";
   }
+
   if (text.includes("account") || text.includes("login") || text.includes("signup")) {
     return "For account-related help, please contact our support team with your registered email.";
   }
+
   if (text.includes("support") || text.includes("help") || text.includes("contact")) {
     return "You can reach our support team by phone at +91 96325 87410 or by email at info@sadhanamythri.com.";
   }
-  if( text.includes("refund") || text.includes("cancellation") || text.includes("policy")) {
+
+  if (text.includes("refund") || text.includes("cancellation") || text.includes("policy")) {
     return "You can review our Refund Policy on the Refund page for details on eligibility, process, and timelines.";
   }
+
   if (text.includes("faq") || text.includes("question") || text.includes("answer")) {
     return "You can find answers to common questions on our FAQ page.";
   }
@@ -44,6 +51,7 @@ export default function SupportChatPage() {
 
   const sendMessage = (event) => {
     event.preventDefault();
+
     const trimmedMessage = message.trim();
     if (!trimmedMessage) return;
 
@@ -52,6 +60,7 @@ export default function SupportChatPage() {
       { role: "user", text: trimmedMessage },
       { role: "assistant", text: getReply(trimmedMessage) },
     ]);
+
     setMessage("");
   };
 
@@ -62,28 +71,76 @@ export default function SupportChatPage() {
           <div>
             <p className="hero-kicker">SUPPORT</p>
             <h1>Chat with us</h1>
-            <p className="page-intro">Get quick help with plans, payments, virtual office services, and your account.</p>
+            <p className="page-intro">
+              Get quick help with plans, payments, virtual office services, and
+              your account.
+            </p>
           </div>
-          <button className="secondary-btn" onClick={() => navigate("/")}>Back to home</button>
+
+          <button
+            className="secondary-btn"
+            onClick={() => navigate("/")}
+          >
+            Back to home
+          </button>
         </div>
 
         <section className="support-chat" aria-label="Support chat">
-          <div className="support-chat-messages" aria-live="polite">
+          <div
+            className="support-chat-messages"
+            aria-live="polite"
+          >
             {messages.map((chatMessage, index) => (
-              <p key={`${chatMessage.role}-${index}`} className={`chat-message ${chatMessage.role}`}>
+              <p
+                key={`${chatMessage.role}-${index}`}
+                className={`chat-message ${chatMessage.role}`}
+              >
                 {chatMessage.text}
               </p>
             ))}
           </div>
-          <form className="support-chat-form" onSubmit={sendMessage}>
-            <label htmlFor="support-message">Your message</label>
+
+          {/* Chat session note */}
+          <p className="support-chat-note">
+            <strong>Note:</strong> This chat session is not maintained and may
+            be lost upon <strong>page refresh</strong>.
+          </p>
+
+          <form
+            className="support-chat-form"
+            onSubmit={sendMessage}
+          >
             <div>
-              <input id="support-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Type your question..." />
-              <button className="primary-btn" type="submit">Send</button>
+              <input
+                id="support-message"
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder="Ask your query here..."
+              />
+
+              <button
+                className="primary-btn"
+                type="submit"
+              >
+                Submit
+              </button>
+
+              <button
+                className="secondary-btn"
+                type="button"
+                onClick={() => setMessages([welcomeMessage])}
+              >
+                Clear Chat
+              </button>
             </div>
           </form>
+
           <p className="support-chat-contact">
-            Prefer to speak with our team? <a href="tel:+919632587410">+91 96325 87410</a> or <a href="mailto:info@sadhanamythri.com">info@sadhanamythri.com</a>
+            Prefer to speak with our team?{" "}
+            <a href="tel:+919632587410">+91 96325 87410</a> or{" "}
+            <a href="mailto:info@sadhanamythri.com">
+              info@sadhanamythri.com
+            </a>
           </p>
         </section>
       </section>
