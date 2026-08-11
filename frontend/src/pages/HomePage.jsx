@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../services/api";
 import { monthlyPlanPrices } from "../utils/pricing";
+import citylineImage from "../cityline-background.png";
 import plantImage from "../plant.png";
 import logoImage from "../Elevanta Spaces Logo.png?v=2";
 
@@ -206,32 +207,44 @@ export default function HomePage() {
             </button>
           </div>
 
-      {/*<div className="trust-row">
-            <span>🛡 GST Compliant</span>
+      <div className="trust-row">
+           {/* <span>🛡 GST Compliant</span>*/}
             <span>🔒 Secure & Private</span>
             <span>🎧 24x7 Support</span>
-          </div> */}
+          </div> 
         </div>
 
         <div className="hero-right" aria-hidden="true">
-          {/*<div className="floating-card floating-top-left">
-            <span className="mini-icon">🏢</span>
-            <div>
-              <strong>Professional</strong>
-              <span>Address</span>
-            </div>
-          </div>*/}
-          {/*<div className="floating-card floating-bottom-left">
-            <span className="mini-icon">🔐</span>
-            <div>
-              <strong>Privacy</strong>
-              <span>Assured</span>
-            </div>
-          </div>*/}
+          <div className="floating-trait-list">
+          <div className="floating-card floating-center">
+            {/*<span className="mini-icon">🏢</span>*/}
+            <p>
+              <u><strong>Easy Verification</strong></u>
+            </p>
+          </div>
+          <div className="floating-card floating-center">
+            {/*<span className="mini-icon">🔐</span>*/}
+            <p>
+              <u><strong>Privacy Assured</strong></u>
+            </p>
+          </div>
+
+          <div className="floating-card floating-center">
+            {/*<span className="mini-icon">A</span>*/}
+            <u><strong>Business Address for you</strong></u>
+          </div>
+          <div className="floating-card floating-center">
+            {/*<span className="mini-icon">M</span>*/}
+            <u><strong>Mail Handling</strong></u>
+          </div>
+          </div>
 
           <div className="scene">
             <div className="window-panel" />
-            <div className="cityline" />
+            <div
+              className="cityline"
+              style={{ backgroundImage: `url(${citylineImage})` }}
+            />
             <div className="desk">
               <div className="desk-shadow" />
               <div className="plant plant-left">
@@ -249,21 +262,21 @@ export default function HomePage() {
                 <img className="plant-image" src={plantImage} alt="" />
               </div>
             </div>
-             {/* <div className="address-bubble"> 
+              <div className="address-bubble"> 
                <div className="building">🏙</div> 
-               <div>
-                <strong>Your Business Address</strong>
+               <p>
+                <li><strong>Your Business Address</strong></li>
                 <span>TBD</span>
-              </div> 
+              </p> 
              <div className="floating-card floating-mid-left">
              <span className="mini-icon">📬</span> 
-             <div>
-              <strong>Mail & Document</strong>
+             <p>
+              <li><strong>Mail & Document</strong></li>
               <span>Management</span>
-            </div> 
+            </p> 
           </div>
              <div className="ok">✓</div>
-             </div> */}
+             </div> 
             {/*  <div className="pin">📍</div> */}
           </div>  
 

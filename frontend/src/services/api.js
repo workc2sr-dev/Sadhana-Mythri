@@ -42,6 +42,7 @@ export const api = {
     }),
   getInvoices: () => request("/invoices"),
   getAdminUsers: () => request("/admin/users"),
+  deleteAdminUser: (userId) => request(`/admin/users/${userId}`, { method: "DELETE" }),
   getAdminVerifications: () => request("/admin/verifications"),
   reviewVerification: (verificationId, reviewStatus) =>
     request(`/admin/verifications/${verificationId}`, {

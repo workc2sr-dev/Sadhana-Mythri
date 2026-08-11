@@ -225,3 +225,32 @@ def admin_users(_: User = Depends(get_admin_user), db: Session = Depends(get_db)
     # Ignore incomplete legacy records so the administrative directory only
     # returns accounts that can be safely represented to the client.
     return db.query(User).filter(User.email != "").all()
+
+
+@router.delete("/admin/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: int,
+    admin: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    account = db.get(User, user_id)
+    if not account:
+        raise HTTPException(404, "User not found")
+    if account.id == admin.id or account.is_admin:
+        raise HTTPException(403, "Administrator accounts cannot be deleted")
+
+    verifications = db.query(Verification).filter(Verification.user_id == account.id).all()
+    document_paths = [Path(verification.document_path) for verification in verifications if verification.document_path]
+    try:
+        db.query(Invoice).filter(Invoice.user_id == account.id).delete(synchronize_session=False)
+        db.query(Subscription).filter(Subscription.user_id == account.id).delete(synchronize_session=False)
+        db.query(Verification).filter(Verification.user_id == account.id).delete(synchronize_session=False)
+        db.delete(account)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    for document_path in document_paths:
+        if document_path.is_file():
+            document_path.unlink()

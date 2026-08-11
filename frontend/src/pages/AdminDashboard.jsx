@@ -67,6 +67,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const deleteUser = async (account) => {
+    if (!window.confirm(`Delete ${account.full_name}'s account and all related records? This cannot be undone.`)) return;
+    setError("");
+    try {
+      await api.deleteAdminUser(account.id);
+      setUsers((current) => current.filter((userAccount) => userAccount.id !== account.id));
+      setVerifications((current) => current.filter((verification) => verification.user_id !== account.id));
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  };
+
   const viewVerification = async (verificationId) => {
     setError("");
     try {
@@ -90,7 +102,7 @@ export default function AdminDashboard() {
       <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">QUICK ACCESS</p><h2>Operational modules</h2></div></div><div className="admin-shortcuts">{sections.slice(1).map((section) => <button key={section} onClick={() => setTab(section)}>{section}<span>→</span></button>)}</div></section>
     </>;
 
-    if (tab === "Users") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">USERS</p><h2>Account directory</h2></div><span>{number(users.length)} accounts</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>{users.map((account) => <tr key={account.id}><td>{account.full_name}</td><td>{account.email}</td><td><span className={`role-chip ${account.is_admin ? "role-admin" : ""}`}>{account.is_admin ? "Administrator" : "User"}</span></td></tr>)}</tbody></table></div>}</section>;
+    if (tab === "Users") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">USERS</p><h2>Account directory</h2></div><span>{number(users.length)} accounts</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody>{users.map((account) => <tr key={account.id}><td>{account.full_name}</td><td>{account.email}</td><td><span className={`role-chip ${account.is_admin ? "role-admin" : ""}`}>{account.is_admin ? "Administrator" : "User"}</span></td><td>{account.is_admin ? "Protected" : <button className="delete-user-btn" onClick={() => deleteUser(account)}>Delete</button>}</td></tr>)}</tbody></table></div>}</section>;
 
     if (tab === "Plans") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">PLANS</p><h2>Service catalogue</h2></div></div><div className="admin-plan-grid">{plans.map((plan) => <article key={plan.id}><p>{plan.id}</p><h3>{plan.name}</h3><strong>₹{number(plan.price)}</strong><span>{plan.workspace_days} workspace days</span></article>)}</div></section>;
 
