@@ -9,10 +9,12 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (!isAuthenticated) navigate("/auth", { replace: true });
-    else if (sessionStorage.getItem("sadhana_otp_verified") !== "true") navigate("/otp", { replace: true });
   }, [isAuthenticated, navigate]);
 
-  const signOut = () => { logout(); navigate("/"); };
+  const signOut = () => {
+    logout();
+    navigate("/");
+  };
   return <PortalLayout onBack={() => navigate("/")} onLogout={signOut}>
     <div className="welcome"><div><p className="eyebrow">NOTIFICATIONS</p><h1>Stay up to date.</h1></div></div>
     <div className="empty-panel"><h2>You’re all caught up.</h2><p>Updates about application decisions will appear here.</p></div>

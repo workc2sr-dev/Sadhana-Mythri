@@ -27,11 +27,11 @@ export default function AuthPage() {
           ["under_review", "approved", "active"].includes(subscription.status),
         );
         if (hasActivePlan) {
-          navigate("/otp?notice=one-plan");
+          navigate(`/otp?notice=one-plan${planId ? `&plan=${planId}` : ""}`);
           return;
         }
       }
-      navigate(signedInUser.is_admin ? "/otp" : planId ? `/otp?plan=${planId}` : "/otp");
+      navigate(`/otp${planId ? `?plan=${planId}` : ""}`);
     } catch (err) {
       setError(err.message);
     } finally {

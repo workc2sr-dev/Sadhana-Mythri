@@ -3,9 +3,11 @@ import { api } from "../services/api";
 
 export const AuthContext = createContext(null);
 const SESSION_EXPIRY_KEY = "sadhana_session_expires_at";
+const INACTIVITY_TIMEOUT_MS = 20 * 60 * 1000;
 
 export function AuthProvider({ children }) {
-  const logoutTimer = useRef(null);
+  const sessionExpiryTimer = useRef(null);
+  const inactivityTimer = useRef(null);
   const [user, setUser] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("sadhana_user"));
@@ -23,6 +25,11 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("sadhana_token");
     localStorage.removeItem(SESSION_EXPIRY_KEY);
     sessionStorage.removeItem("sadhana_otp_verified");
+    sessionStorage.removeItem("sadhana_otp");
+    if (inactivityTimer.current) {
+      window.clearTimeout(inactivityTimer.current);
+      inactivityTimer.current = null;
+    }
     setUser(null);
   }, []);
 
@@ -40,8 +47,46 @@ export function AuthProvider({ children }) {
       return undefined;
     }
 
-    logoutTimer.current = window.setTimeout(clearSession, remaining);
-    return () => window.clearTimeout(logoutTimer.current);
+    sessionExpiryTimer.current = window.setTimeout(clearSession, remaining);
+    return () => window.clearTimeout(sessionExpiryTimer.current);
+  }, [user, clearSession]);
+
+  useEffect(() => {
+    if (!user) {
+      if (inactivityTimer.current) {
+        window.clearTimeout(inactivityTimer.current);
+        inactivityTimer.current = null;
+      }
+      return undefined;
+    }
+
+    const resetInactivityTimer = () => {
+      if (inactivityTimer.current) {
+        window.clearTimeout(inactivityTimer.current);
+      }
+
+      inactivityTimer.current = window.setTimeout(() => {
+        window.alert("Your session expired due to inactivity. Please sign in again.");
+        clearSession();
+      }, INACTIVITY_TIMEOUT_MS);
+    };
+
+    const activityEvents = ["mousemove", "keydown", "click", "scroll", "touchstart", "pointerdown"];
+
+    resetInactivityTimer();
+    activityEvents.forEach((eventName) => {
+      window.addEventListener(eventName, resetInactivityTimer, { passive: true });
+    });
+
+    return () => {
+      if (inactivityTimer.current) {
+        window.clearTimeout(inactivityTimer.current);
+        inactivityTimer.current = null;
+      }
+      activityEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, resetInactivityTimer);
+      });
+    };
   }, [user, clearSession]);
 
   const login = async (credentials) => {

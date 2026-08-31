@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.auth.security import (
     create_token,
@@ -31,6 +32,34 @@ from app.services.seed import ensure_admin, ensure_plans
 router = APIRouter()
 KYC_UPLOAD_DIR = Path(__file__).resolve().parents[2] / "uploads" / "kyc"
 ACTIVE_SUBSCRIPTION_STATUSES = ("under_review", "approved", "active")
+ACCOUNT_STATUS_LABELS = {
+    "under_review": "Under review",
+    "verified": "Verified",
+    "created": "Created",
+}
+
+
+class SupportChatRequest(BaseModel):
+    message: str
+    history: list[dict[str, str]] = []
+
+
+def sync_account_status(user: User, db: Session) -> str:
+    verification = db.query(Verification).filter(Verification.user_id == user.id).first()
+    if verification and verification.status == "approved" and verification.reviewed_at:
+        if datetime.utcnow() - verification.reviewed_at >= timedelta(days=1):
+            user.account_status = "created"
+        else:
+            user.account_status = "verified"
+    elif user.is_admin:
+        user.account_status = "created"
+    elif verification and verification.status in {"pending", "declined"}:
+        user.account_status = "under_review"
+    elif not verification:
+        user.account_status = "under_review"
+    db.add(user)
+    db.commit()
+    return user.account_status
 
 
 @router.on_event("startup")
@@ -54,6 +83,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         full_name=payload.full_name,
         email=payload.email,
         password_hash=hash_password(payload.password),
+        account_status="under_review",
     )
     db.add(user)
     db.commit()
@@ -67,7 +97,9 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(401, "Incorrect email or password")
 
+    sync_account_status(user, db)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    db.refresh(user)
     return {
         "access_token": create_token(user.id, expires_at),
         "token_type": "bearer",
@@ -110,9 +142,11 @@ def create_subscription(
     if active_subscription:
         raise HTTPException(status.HTTP_409_CONFLICT, "One plan per account")
 
+    sync_account_status(user, db)
+    sync_account_status(user, db)
     verification = db.query(Verification).filter(Verification.user_id == user.id).first()
-    if not verification or verification.status != "approved":
-        raise HTTPException(403, "Government ID verification must be approved before subscribing")
+    if user.account_status != "created" or not verification or verification.status != "approved":
+        raise HTTPException(403, "Government ID verification must be approved and the account must be created before subscribing")
 
     subscription = Subscription(user_id=user.id, plan_id=payload.plan_id, status="under_review")
     db.add(subscription)
@@ -195,8 +229,18 @@ def review_verification(
     verification = db.get(Verification, verification_id)
     if not verification:
         raise HTTPException(404, "Verification not found")
+
     verification.status = payload.status
     verification.reviewed_at = datetime.utcnow()
+
+    account = db.get(User, verification.user_id)
+    if account:
+        if payload.status == "approved":
+            account.account_status = "verified"
+        else:
+            account.account_status = "under_review"
+        db.add(account)
+
     db.commit()
     db.refresh(verification)
     return verification
@@ -213,6 +257,21 @@ def get_verification_document(
     if not document_path or not document_path.is_file():
         raise HTTPException(404, "Government ID file not found")
     return FileResponse(document_path, filename=verification.document_name or document_path.name)
+
+
+@router.post("/chat/support")
+async def support_chat(payload: SupportChatRequest):
+    user_message = (payload.message or "").strip()
+    if not user_message:
+        raise HTTPException(status_code=400, detail="Message is required")
+
+    return {
+        "reply": (
+            "Thanks for reaching out. Our support team can help with account setup, plan questions, "
+            "document verification, and general guidance. Please contact +91 8904178434 or "
+            "info@sadhanamythri.com for direct assistance."
+        )
+    }
 
 
 @router.get("/invoices")

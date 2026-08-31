@@ -11,7 +11,7 @@ export default function OtpPage() {
   const planId = searchParams.get("plan");
   const notice = searchParams.get("notice");
   const { user } = useAuth();
-  const dashboardPath = user?.is_admin ? "/admin" : planId ? `/dashboard/plans?plan=${planId}` : notice ? `/dashboard?notice=${notice}` : "/dashboard";
+  const returnPath = user?.is_admin ? "/admin" : "/";
 
   useEffect(() => { sessionStorage.setItem("sadhana_otp", otp); }, [otp]);
 
@@ -20,7 +20,8 @@ export default function OtpPage() {
     if (value !== otp) { setError("That OTP does not match. Please try again."); return; }
     sessionStorage.setItem("sadhana_otp_verified", "true");
     sessionStorage.removeItem("sadhana_otp");
-    navigate(dashboardPath, { replace: true });
+    const destination = planId ? `/payment?plan=${planId}` : returnPath;
+    navigate(destination, { replace: true });
   };
 
   const resend = () => {

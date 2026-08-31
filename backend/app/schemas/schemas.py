@@ -18,6 +18,7 @@ class UserResponse(BaseModel):
     full_name: str
     email: EmailStr
     is_admin: bool
+    account_status: str = "under_review"
 
     class Config:
         from_attributes = True

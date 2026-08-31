@@ -9,10 +9,12 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!isAuthenticated) navigate("/auth", { replace: true });
-    else if (sessionStorage.getItem("sadhana_otp_verified") !== "true") navigate("/otp", { replace: true });
   }, [isAuthenticated, navigate]);
 
-  const signOut = () => { logout(); navigate("/"); };
+  const signOut = () => {
+    logout();
+    navigate("/");
+  };
   const initials = user?.full_name?.split(" ").map((name) => name[0]).join("").slice(0, 2).toUpperCase() || "SM";
 
   return <PortalLayout onBack={() => navigate("/")} onLogout={signOut}>

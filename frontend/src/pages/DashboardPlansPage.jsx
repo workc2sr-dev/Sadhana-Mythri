@@ -26,18 +26,22 @@ export default function DashboardPlansPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const selectedPlanId = searchParams.get("plan");
+  const accountState = user?.account_status || "under_review";
+  const isCreated = accountState === "created";
 
   const loadVerification = () => api.getVerification().then(setVerification).catch((requestError) => setError(requestError.message));
 
   useEffect(() => {
     if (!isAuthenticated) { navigate("/auth", { replace: true }); return; }
-    if (sessionStorage.getItem("sadhana_otp_verified") !== "true") { navigate("/otp", { replace: true }); return; }
     loadVerification();
   }, [isAuthenticated, navigate]);
 
-  const signOut = () => { logout(); navigate("/"); };
+  const signOut = () => {
+    logout();
+    navigate("/");
+  };
 
   const uploadKyc = async (event) => {
     event.preventDefault();
@@ -56,8 +60,8 @@ export default function DashboardPlansPage() {
   };
 
   const subscribe = async (planId) => {
-    if (verification.status !== "approved") {
-      setError("Government ID verification must be approved before subscribing.");
+    if (accountState !== "created" || verification.status !== "approved") {
+      setError("Government ID verification must be approved and your account must be created before subscribing.");
       return;
     }
     setBusy(true);
@@ -75,8 +79,8 @@ export default function DashboardPlansPage() {
 
   return <PortalLayout onBack={() => navigate("/")} onLogout={signOut}>
     <div className="welcome"><div><p className="eyebrow">PLANS & KYC</p><h1>Verify your ID, then subscribe.</h1></div></div>
-    <section className="empty-panel kyc-panel"><p className="eyebrow">GOVERNMENT ID VERIFICATION</p><h2>{statusLabels[verification.status] || "KYC status unavailable"}</h2>{verification.document_name && <p>Submitted document: {verification.document_name}</p>}{verification.status !== "approved" && <form className="kyc-form" onSubmit={uploadKyc}><label>Government ID type<select value={documentType} onChange={(event) => setDocumentType(event.target.value)}><option>Aadhaar card</option><option>PAN card</option><option>Passport</option><option>Driving licence</option><option>Voter ID</option></select></label><label>Upload ID (PDF, JPG, or PNG; max 5 MB)<input required type="file" accept="application/pdf,image/jpeg,image/png" onChange={(event) => setDocument(event.target.files?.[0] || null)} /></label><button className="secondary-btn" disabled={busy}>{busy ? "Uploading…" : "Submit for review"}</button></form>}{verification.status === "pending" && <p>Your document is waiting for an administrator’s decision.</p>}</section>
+    <section className="empty-panel kyc-panel"><p className="eyebrow">GOVERNMENT ID VERIFICATION</p><h2>{statusLabels[verification.status] || "KYC status unavailable"}</h2>{verification.document_name && <p>Submitted document: {verification.document_name}</p>}{verification.status !== "approved" && <form className="kyc-form" onSubmit={uploadKyc}><label>Government ID type<select value={documentType} onChange={(event) => setDocumentType(event.target.value)}><option>Aadhaar card</option><option>PAN card</option><option>Passport</option><option>Driving licence</option><option>Voter ID</option></select></label><label>Upload ID (PDF, JPG, or PNG; max 5 MB)<input required type="file" accept="application/pdf,image/jpeg,image/png" onChange={(event) => setDocument(event.target.files?.[0] || null)} /></label><button className="secondary-btn" disabled={busy}>{busy ? "Uploading…" : "Submit for review"}</button></form>}{verification.status === "pending" && <p>Your document is waiting for an administrator’s decision.</p>}{accountState === "verified" && <p>Your account is verified and will be created automatically the next day using the same credentials.</p>}{accountState === "created" && <p>Your account has been created and is ready for plan selection.</p>}</section>
     {error && <p className="form-error" role="alert">{error}</p>}
-    <section className="dashboard-plans"><p className="eyebrow">AVAILABLE PLANS</p><div className="plans-page-grid">{plans.map((plan) => <article key={plan.id} className={`plan-card ${plan.featured ? "featured" : ""} ${selectedPlanId === plan.id ? "selected-plan" : ""}`}><h3>{plan.name}</h3><p className="plan-note">{plan.note}</p><p className="plan-price">₹{plan.price.toLocaleString("en-IN")}<small> / month</small></p><p className="plan-note">₹{annualPlanPrice(plan.price).toLocaleString("en-IN")} billed annually</p><button className={plan.featured ? "primary-btn" : "secondary-btn"} disabled={busy || verification.status !== "approved"} onClick={() => subscribe(plan.id)}>{verification.status === "approved" ? "Subscribe" : "KYC approval required"}</button></article>)}</div></section>
+    <section className="dashboard-plans"><p className="eyebrow">AVAILABLE PLANS</p><div className="plans-page-grid">{plans.map((plan) => <article key={plan.id} className={`plan-card ${plan.featured ? "featured" : ""} ${selectedPlanId === plan.id ? "selected-plan" : ""}`}><h3>{plan.name}</h3><p className="plan-note">{plan.note}</p><p className="plan-price">₹{plan.price.toLocaleString("en-IN")}<small> / month</small></p><p className="plan-note">₹{annualPlanPrice(plan.price).toLocaleString("en-IN")} billed annually</p><button className={plan.featured ? "primary-btn" : "secondary-btn"} disabled={busy || !isCreated} onClick={() => subscribe(plan.id)}>{isCreated ? "Subscribe" : "Account pending activation"}</button></article>)}</div></section>
   </PortalLayout>;
 }

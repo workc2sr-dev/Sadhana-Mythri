@@ -1,8 +1,13 @@
+import { useNavigate, useSearchParams } from "react-router-dom";
 import InfoPage from "../components/InfoPage";
 
 const documentationFile = "/documents/Sadhana%20Mythri%20Documentation.docx";
 
 export default function DocumentationPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planId = searchParams.get("plan");
+
   return (
     <InfoPage
       title="Platform Documentation"
@@ -49,9 +54,14 @@ export default function DocumentationPage() {
       backLabel="Back to home"
       backTo="/"
     >
-      <a href={documentationFile} download>
-        Download documentation
-      </a>
+      <div className="page-actions" style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        <button className="primary-btn" type="button" onClick={() => navigate(planId ? `/otp?plan=${planId}` : "/auth")}>
+          Verify and continue
+        </button>
+        <a href={documentationFile} download>
+          Download documentation
+        </a>
+      </div>
     </InfoPage>
   );
 }

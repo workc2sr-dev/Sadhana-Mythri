@@ -62,7 +62,8 @@ export default function PlansPage() {
         // The payment endpoint still enforces the one-plan rule if this check cannot load.
       }
     }
-    navigate(isAuthenticated ? `/dashboard/plans?plan=${planId}` : `/auth?plan=${planId}`);
+
+    navigate(isAuthenticated ? `/documentation?plan=${planId}` : `/auth?plan=${planId}`);
   };
 
   return (

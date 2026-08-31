@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../services/api";
+import ConfirmationModal from "../components/ConfirmationModal";
 import { monthlyPlanPrices } from "../utils/pricing";
 import citylineImage from "../cityline-background.png";
 import plantImage from "../plant.png";
@@ -9,42 +10,50 @@ import logoImage from "../Elevanta Spaces Logo.png?v=2";
 
 const features = [
   {
-    title: <strong>Official Business Address</strong>,
+    id: "official-address",
+    title: "Official Business Address",
     text: "Use a credible business address for registrations and growth.",
   },
   {
-    title: <strong>Easy Online Registration & Verification</strong>,
+    id: "online-registration",
+    title: "Easy Online Registration & Verification",
     text: "Quick, paperless, and hassle-free onboarding process.",
   },
   {
-    title: <strong>Flexible Subscription Plans</strong>,
+    id: "subscription-plans",
+    title: "Flexible Subscription Plans",
     text: "Choose a plan that fits your business needs and budget.",
   },
   {
-    title: <strong>Secure Dashboard for Billing & Management</strong>,
+    id: "billing-dashboard",
+    title: "Secure Dashboard for Billing & Management",
     text: "Manage documents, payments and renewals in one place.",
   },
 ];
 
 const steps = [
   {
+    id: "login-signup",
     n: "1",
-    title: <strong>Login / Signup</strong>,
+    title: "Login / Signup",
     text: "Login or create an account with your Gmail and a password to get started with your virtual office address.",
   },
   /*{
+    id: "register-verify",
     n: "2",
-    title: <strong>Register & Verify</strong>,
+    title: "Register & Verify",
     text: "Complete your details and verify online in minutes.",
   },*/
   {
+    id: "subscription-approval",
     n: "2",
-    title: <strong>Subscription Approval</strong>,
+    title: "Subscription Approval",
     text: "We verify your details and activate your plan.",
   },
   {
+    id: "virtual-office",
     n: "3",
-    title: <strong>Your Virtual Office Address</strong>,
+    title: "Your Virtual Office Address",
     text: "Use your address for business registration and grow confidently.",
   },
 ];
@@ -112,12 +121,31 @@ function CheckItem({ children }) {
 
 export default function HomePage() {
   const [notice, setNotice] = useState("");
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
 
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const signOut = () => {
+    logout();
+    sessionStorage.removeItem("sadhana_otp_verified");
+    setLogoutOpen(false);
+    navigate("/");
+  };
+
+  const accountSidebarItems = [
+    { label: "My Plan", to: "/dashboard/plans" },
+    { label: "Update", to: "/dashboard/plans" },
+    { label: "Cancel", to: "/dashboard/plans" },
+    { label: "Settings", to: "/dashboard/profile" },
+    { label: "Profile", to: "/dashboard/profile" },
+    { label: "Applications", to: "/dashboard/applications" },
+    { label: "Notifications", to: "/dashboard/notifications" },
+    { label: "Logout", action: "logout" },
+  ];
 
   const choosePlan = async (plan) => {
     setNotice(`${plan.name} selected.`);
@@ -128,7 +156,7 @@ export default function HomePage() {
           ["under_review", "approved", "active"].includes(subscription.status),
         );
         if (hasActivePlan) {
-          navigate("/dashboard?notice=one-plan");
+          setNotice("One plan per account.");
           return;
         }
       } catch {
@@ -144,7 +172,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="landing">
+    <main className={`landing${isAuthenticated && !user?.is_admin ? " landing-authenticated" : ""}`}>
       <header className="site-header">
         <a className="brand-block" href="#home" onClick={() => scrollToSection("home")}>
           <img className="brand-logo" src={logoImage} alt="Sadhana Mythri" />
@@ -170,17 +198,71 @@ export default function HomePage() {
         </nav>
 
         <div className="header-actions">
-          <a className="phone-pill" href="tel:+919632587410">
-            <span>☎</span> +91 96325 87410
+          <a className="phone-pill" href="tel:+918904178434" aria-label="Call us">
+            <span>☎</span> +91 8904178434
           </a>
-          <button className="login-btn" onClick={() => navigate("/auth")}>
-            Login
-          </button>
-          <button className="signup-btn" onClick={() => navigate("/auth")}>
-            Sign Up
-          </button>
+
+          {isAuthenticated && !user?.is_admin ? (
+            <div className="user-account-pill" aria-label="Signed in user">
+              <span className="user-avatar">{(user?.full_name || "U").split(" ").map((name) => name[0]).join("").slice(0, 2).toUpperCase() || "U"}</span>
+              <span className="user-menu-label">{user?.full_name || "My Account"}</span>
+            </div>
+          ) : isAuthenticated && user?.is_admin ? (
+            <button className="login-btn" onClick={() => navigate("/admin")}>
+              Admin Console
+            </button>
+          ) : (
+            <>
+              <button className="login-btn" onClick={() => navigate("/auth")}>
+                Login
+              </button>
+              <button className="signup-btn" onClick={() => navigate("/auth")}>
+                Sign Up
+              </button>
+            </>
+          )}
         </div>
       </header>
+
+      <ConfirmationModal
+        open={logoutOpen}
+        title="Log out"
+        message="Are you sure you want to log out?"
+        confirmLabel="Yes, log out"
+        onConfirm={signOut}
+        onCancel={() => setLogoutOpen(false)}
+      />
+
+      {isAuthenticated && !user?.is_admin && (
+        <div className="landing-account-toolbar" aria-label="Account navigation">
+          <div className="landing-account-identity">
+            <span className="user-avatar">{(user?.full_name || "U").split(" ").map((name) => name[0]).join("").slice(0, 2).toUpperCase() || "U"}</span>
+            <div>
+              <strong>{user?.full_name || "My Account"}</strong> 
+              <div>{user?.email}</div>
+            </div>
+          </div>
+
+          <nav className="landing-account-nav" aria-label="Account navigation links">
+            {accountSidebarItems.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                className={`landing-sidebar-link${item.action === "logout" ? " logout-item" : ""}`}
+                onClick={() => {
+                  if (item.action === "logout") {
+                    setLogoutOpen(true);
+                    return;
+                  }
+                  navigate(item.to);
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      )}
 
       <section className="hero" id="home">
         <div className="hero-left">
@@ -207,11 +289,11 @@ export default function HomePage() {
             </button>
           </div>
 
-      <div className="trust-row">
-           {/* <span>🛡 GST Compliant</span>*/}
+      {/* <div className="trust-row">
+           <span>🛡 GST Compliant</span>
             <span>🔒 Secure & Private</span>
             <span>🎧 24x7 Support</span>
-          </div> 
+          </div> */}
         </div>
 
         <div className="hero-right" aria-hidden="true">
@@ -287,10 +369,10 @@ export default function HomePage() {
 
       <section className="feature-strip" id="features">
         {features.map((feature) => (
-          <article key={feature.title} className="feature-card">
+          <article key={feature.id} className="feature-card">
             <div className="feature-illustration" aria-hidden="true" />
             <div>
-              <h3>{feature.title}</h3>
+              <h3><strong>{feature.title}</strong></h3>
               <p>{feature.text}</p>
             </div>
           </article>
@@ -301,10 +383,10 @@ export default function HomePage() {
         <p className="section-title">How It Works</p>
         <div className="steps vertical">
           {steps.map((step) => (
-            <article key={step.n} className="step">
+            <article key={step.id} className="step">
               <div className="step-circle">{step.n}</div>
               <div className="step-body">
-                <h3>{step.title}</h3>
+                <h3><strong>{step.title}</strong></h3>
                 <p>{step.text}</p>
               </div>
               <div className="step-line" aria-hidden="false" />
@@ -371,12 +453,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="trust-band">
+     {/* <section className="trust-band">
         <span>GST Compliant</span>
         <span>Secure & Confidential</span>
         <span>Instant Activation</span>
         <span>24x7 Customer Support</span>
-      </section>
+      </section>*/}
 
       <section className="cta-band">
         <div className="cta-image left" aria-hidden="true" />
@@ -475,7 +557,7 @@ export default function HomePage() {
         <div className="footer-contact">
           <p>Contact Us:</p>
           <div className="footer-contact-line">
-            <a href="tel:+919876543210">+91-9632587410</a>
+            <a href="tel:+918904178434" aria-label="Call us">+91-8904178434</a>
             <span className="footer-divider" aria-hidden="true">||</span>
             <a href="mailto:info@sadhanamythri.com">info@sadhanamythri.com</a>
           </div>

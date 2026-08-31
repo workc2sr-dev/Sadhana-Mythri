@@ -11,6 +11,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    account_status: Mapped[str] = mapped_column(String(30), default="under_review")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
