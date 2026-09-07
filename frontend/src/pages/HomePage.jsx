@@ -57,12 +57,13 @@ const steps = [
     text: "Use your address for business registration and grow confidently.",
   },
 ];
+/*plans we offer heading*/
 
 const plans = [
   {
     id: "essential",
     name: "Starter Plan",
-    note: "For freelancers",
+    /*note: "For freelancers",*/
     price: monthlyPlanPrices.essential,
     items: [
       "Official Business Address",
@@ -72,7 +73,7 @@ const plans = [
   {
     id: "business",
     name: "Growth Plan",
-    note: "For startups",
+    /*note: "For startups",*/
     price: monthlyPlanPrices.business,
     items: [
       "Official Business Address",
@@ -82,8 +83,8 @@ const plans = [
     featured: true,
   },
   {
-    name: "Enterprise Plan",
-    note: "For growing businesses",
+    name: "Enterprise Plan" ,
+    /*note: "For growing businesses",*/
     id: "enterprise",
     price: monthlyPlanPrices.enterprise,
     items: [
@@ -122,6 +123,12 @@ function CheckItem({ children }) {
 export default function HomePage() {
   const [notice, setNotice] = useState("");
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([{
+    role: "assistant",
+    text: "Hi! How can I help you today?",
+  }]);
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
 
@@ -134,6 +141,48 @@ export default function HomePage() {
     sessionStorage.removeItem("sadhana_otp_verified");
     setLogoutOpen(false);
     navigate("/");
+  };
+
+  const sendMessage = async (event) => {
+    event.preventDefault();
+
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) return;
+
+    const userMessage = { role: "user", text: trimmedMessage };
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/chat/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: trimmedMessage,
+          history: nextMessages.map(({ role, text }) => ({ role, text })),
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Unable to get a support reply.");
+      }
+
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        { role: "assistant", text: data.reply },
+      ]);
+    } catch (error) {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          role: "assistant",
+          text:
+            "Sorry, I'm temporarily unavailable. Please contact our support team at +91 96325 87410 or info@sadhanamythri.com.",
+        },
+      ]);
+    }
   };
 
   const accountSidebarItems = [
@@ -570,11 +619,81 @@ export default function HomePage() {
         <button className="chat-bubble"
          type="button" 
          aria-label="Open support chat" 
-         onClick={() => navigate("/support-chat")}
+         onClick={() => setChatOpen(true)}
         >
           💬
         </button>
       </div>
+
+      {chatOpen && (
+        <div className="chat-modal-overlay" onClick={() => setChatOpen(false)}>
+          <div className="chat-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="chat-modal-header">
+              <div>
+                <h2>Chat with us</h2>
+                <p>Get quick help with your queries about your account.</p>
+              </div>
+              <button
+                className="chat-modal-close"
+                onClick={() => setChatOpen(false)}
+                aria-label="Close chat"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="support-chat-messages" aria-live="polite">
+              {messages.map((chatMessage, index) => (
+                <p
+                  key={`${chatMessage.role}-${index}`}
+                  className={`chat-message ${chatMessage.role}`}
+                >
+                  {chatMessage.text}
+                </p>
+              ))}
+            </div>
+
+            <p className="support-chat-note">
+              <strong>Note:</strong> This chat session is not maintained and may
+              be lost upon <strong>closing the chat</strong>.
+            </p>
+
+            <form className="support-chat-form" onSubmit={sendMessage}>
+              <div>
+                <input
+                  id="support-message"
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  placeholder="Ask your query here..."
+                />
+
+                <button className="primary-btn" type="submit">
+                  Submit
+                </button>
+
+                <button
+                  className="secondary-btn"
+                  type="button"
+                  onClick={() => setMessages([{
+                    role: "assistant",
+                    text: "Hi! How can I help you today?",
+                  }])}
+                >
+                  Clear Chat
+                </button>
+              </div>
+            </form>
+
+            <p className="support-chat-contact">
+              Prefer to speak with our team?{" "}
+              <a href="tel:+918904178434" aria-label="Call us">+91 8904178434</a> or{" "}
+              <a href="mailto:info@sadhanamythri.com">
+                info@sadhanamythri.com
+              </a>
+            </p>
+          </div>
+        </div>
+      )}
 
       {notice && (
         <div className="toast">

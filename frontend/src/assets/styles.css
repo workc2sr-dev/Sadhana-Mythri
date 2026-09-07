@@ -1638,6 +1638,82 @@ a {
   font-weight: 700;
 }
 
+/* Chat Modal Popup */
+.chat-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: rgba(17, 24, 18, 0.48);
+  backdrop-filter: blur(3px);
+}
+
+.chat-modal {
+  width: min(42vw, 500px);
+  max-height: 70vh;
+  background: #bfdfb6;
+  border: 2px solid #e7dcc3;
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chat-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(36, 75, 60, 0.1);
+}
+
+.chat-modal-header h2 {
+  margin: 0;
+  color: var(--deep);
+  font-size: 24px;
+}
+
+.chat-modal-header p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.chat-modal-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 50px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.chat-modal-close:hover {
+  background: rgba(36, 75, 60, 0.08);
+  color: var(--deep);
+}
+
+.chat-modal .support-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.chat-modal .support-chat-form {
+  margin-top: 0;
+}
+
+
 .toast {
   position: fixed;
   left: 24px;
