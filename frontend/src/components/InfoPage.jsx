@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
+// Generic layout for static informational pages (terms, FAQ, etc.)
 export default function InfoPage({ title, intro, sections, children, backLabel = "Back to home", backTo = "/" }) {
   const navigate = useNavigate();
 

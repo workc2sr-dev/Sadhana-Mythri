@@ -6,11 +6,13 @@ const welcomeMessage = {
   text: "Hi! How can I help you today?",
 };
 
+// Standalone support chat page (no auth required)
 export default function SupportChatPage() {
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([welcomeMessage]);
 
+  // Send a chat message to the support endpoint and append the reply
   const sendMessage = async (event) => {
     event.preventDefault();
 

@@ -3,6 +3,7 @@ import InfoPage from "../components/InfoPage";
 
 const documentationFile = "/documents/Sadhana%20Mythri%20Documentation.docx";
 
+// Static platform documentation page with a download link
 export default function DocumentationPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

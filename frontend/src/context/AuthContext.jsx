@@ -5,6 +5,7 @@ export const AuthContext = createContext(null);
 const SESSION_EXPIRY_KEY = "sadhana_session_expires_at";
 const INACTIVITY_TIMEOUT_MS = 20 * 60 * 1000;
 
+// Provides auth state (user, tokens) and session/inactivity timeout handling to the app
 export function AuthProvider({ children }) {
   const sessionExpiryTimer = useRef(null);
   const inactivityTimer = useRef(null);
@@ -21,6 +22,7 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem("sadhana_user");
   }, [user]);
 
+  // Clear stored tokens/session data and log the user out locally
   const clearSession = useCallback(() => {
     localStorage.removeItem("sadhana_token");
     localStorage.removeItem(SESSION_EXPIRY_KEY);
@@ -60,6 +62,7 @@ export function AuthProvider({ children }) {
       return undefined;
     }
 
+    // Restart the inactivity timer, logging the user out after a period of no activity
     const resetInactivityTimer = () => {
       if (inactivityTimer.current) {
         window.clearTimeout(inactivityTimer.current);
@@ -89,6 +92,7 @@ export function AuthProvider({ children }) {
     };
   }, [user, clearSession]);
 
+  // Log a user in and persist their token/session expiry
   const login = async (credentials) => {
     const result = await api.login(credentials);
     localStorage.setItem("sadhana_token", result.access_token);
@@ -99,9 +103,21 @@ export function AuthProvider({ children }) {
   const register = (details) => api.register(details);
   const logout = clearSession;
 
+  // Refreshes the locally cached account status (e.g. after an admin approves KYC).
+  const refreshUser = useCallback(async () => {
+    if (!localStorage.getItem("sadhana_token")) return null;
+    try {
+      const freshUser = await api.getCurrentUser();
+      setUser(freshUser);
+      return freshUser;
+    } catch {
+      return null;
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, register, isAuthenticated: Boolean(user) }}
+      value={{ user, login, logout, register, refreshUser, isAuthenticated: Boolean(user) }}
     >
       {children}
     </AuthContext.Provider>

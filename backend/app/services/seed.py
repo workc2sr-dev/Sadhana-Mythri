@@ -10,6 +10,7 @@ DEFAULT_PLANS = [
 ]
 
 
+# Insert or update the default subscription plans in the database
 def ensure_plans(db: Session):
     for plan_id, name, price, days in DEFAULT_PLANS:
         plan = db.get(Plan, plan_id)
@@ -30,6 +31,7 @@ def ensure_plans(db: Session):
     db.commit()
 
 
+# Create the admin user from settings if one doesn't already exist
 def ensure_admin(db: Session):
     if not settings.admin_password or db.query(User).filter(User.email == settings.admin_email).first():
         return

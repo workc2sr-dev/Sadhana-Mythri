@@ -1,3 +1,4 @@
+// Displays a single subscription plan's details with a selection button
 export default function PlanCard({ plan, onChoose }) {
   return (
     <article className={`plan-card ${plan.featured ? "featured" : ""}`}>

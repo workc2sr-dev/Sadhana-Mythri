@@ -1,5 +1,6 @@
 import InfoPage from "../components/InfoPage";
 
+// Static frequently asked questions page
 export default function FaqPage() {
   return (
     <InfoPage

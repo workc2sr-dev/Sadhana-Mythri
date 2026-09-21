@@ -1,3 +1,4 @@
+// Top navigation bar with links and a client login button
 export default function Header({ onDashboard }) {
   return (
     <header>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import ConfirmationModal from "../components/ConfirmationModal";
 
+// Sidebar/dashboard shell shared by all authenticated portal pages
 export default function PortalLayout({ onBack, onLogout, children }) {
   const [logoutOpen, setLogoutOpen] = useState(false);
   const tabs = [
@@ -12,13 +13,16 @@ export default function PortalLayout({ onBack, onLogout, children }) {
     { label: "My Profile", to: "/dashboard/profile", type: "default" },
     { label: "Settings", to: "/dashboard/profile", type: "action" },
     { label: "My Applications", to: "/dashboard/applications", type: "default" },
+    { label: "Invoices & Billing", to: "/dashboard/invoices", type: "default" },
     { label: "Notifications", to: "/dashboard/notifications", type: "default" },
   ];
 
+  // Open the logout confirmation dialog
   const confirmLogout = () => {
     setLogoutOpen(true);
   };
 
+  // Close the dialog and perform the actual logout
   const handleLogout = () => {
     setLogoutOpen(false);
     onLogout();

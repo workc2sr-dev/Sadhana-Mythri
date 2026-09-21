@@ -18,7 +18,10 @@ import ProfilePage from "../pages/ProfilePage";
 import ApplicationsPage from "../pages/ApplicationsPage";
 import NotificationsPage from "../pages/NotificationsPage";
 import DashboardPlansPage from "../pages/DashboardPlansPage";
+import BusinessDetailsPage from "../pages/BusinessDetailsPage";
+import InvoicesPage from "../pages/InvoicesPage";
 
+// Defines all client-side routes and maps them to page components
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -30,6 +33,8 @@ export default function AppRouter() {
         <Route path="/dashboard/profile" element={<ProfilePage />} />
         <Route path="/dashboard/applications" element={<ApplicationsPage />} />
         <Route path="/dashboard/plans" element={<DashboardPlansPage />} />
+        <Route path="/dashboard/invoices" element={<InvoicesPage />} />
+        <Route path="/business-details" element={<BusinessDetailsPage />} />
         <Route path="/dashboard/notifications" element={<NotificationsPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/payment" element={<PaymentPage />} />

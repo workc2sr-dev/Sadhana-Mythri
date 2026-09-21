@@ -1,5 +1,6 @@
 import InfoPage from "../components/InfoPage";
 
+// Static refund policy information page
 export default function RefundPage() {
   return (
     <InfoPage

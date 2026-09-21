@@ -1,3 +1,4 @@
+// Landing page hero banner with a call-to-action to explore plans
 export default function Hero({ onExplore }) {
   return (
     <section className="hero" id="top">

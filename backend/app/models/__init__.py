@@ -1,1 +1,1 @@
-from .models import User, Plan, Subscription, Verification, Invoice
+from .models import User, Plan, Subscription, Verification, Invoice, BusinessDetail

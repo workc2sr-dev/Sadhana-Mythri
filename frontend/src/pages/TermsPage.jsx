@@ -1,5 +1,6 @@
 import InfoPage from "../components/InfoPage";
 
+// Static terms and conditions information page
 export default function TermsPage() {
   return (
     <InfoPage

@@ -21,15 +21,18 @@ const moduleDescriptions = {
   "Audit Logs": "Review security-sensitive changes and administrative activity.",
 };
 
+// Format a numeric value with Indian locale grouping, falling back to an em dash
 function number(value) {
   return value?.toLocaleString("en-IN") ?? "—";
 }
 
+// Admin console with tabs for users, plans, documents, and subscriptions
 export default function AdminDashboard() {
   const [tab, setTab] = useState("Overview");
   const [users, setUsers] = useState([]);
   const [plans, setPlans] = useState([]);
   const [verifications, setVerifications] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
@@ -43,20 +46,23 @@ export default function AdminDashboard() {
       navigate("/dashboard", { replace: true });
       return;
     }
-    Promise.all([api.getAdminUsers(), api.getPlans(), api.getAdminVerifications()])
-      .then(([adminUsers, catalog, kycVerifications]) => {
+    Promise.all([api.getAdminUsers(), api.getPlans(), api.getAdminVerifications(), api.getAdminSubscriptions()])
+      .then(([adminUsers, catalog, kycVerifications, adminSubscriptions]) => {
         setUsers(adminUsers);
         setPlans(catalog);
         setVerifications(kycVerifications);
+        setSubscriptions(adminSubscriptions);
       })
       .catch((requestError) => setError(requestError.message));
   }, [isAuthenticated, navigate, user?.is_admin]);
 
+  // Log out the admin and return to the homepage
   const signOut = () => {
     logout();
     navigate("/", { replace: true });
   };
 
+  // Approve or decline a submitted KYC verification
   const reviewVerification = async (verificationId, reviewStatus) => {
     setError("");
     try {
@@ -67,6 +73,7 @@ export default function AdminDashboard() {
     }
   };
 
+  // Delete a user account after confirmation
   const deleteUser = async (account) => {
     if (!window.confirm(`Delete ${account.full_name}'s account and all related records? This cannot be undone.`)) return;
     setError("");
@@ -79,6 +86,7 @@ export default function AdminDashboard() {
     }
   };
 
+  // Open a user's uploaded government ID document in a new tab
   const viewVerification = async (verificationId) => {
     setError("");
     try {
@@ -89,6 +97,7 @@ export default function AdminDashboard() {
     }
   };
 
+  // Render the panel content for the currently selected admin tab
   const content = () => {
     if (tab === "Overview") return <>
       <div className="admin-intro"><div><p className="eyebrow">ADMINISTRATOR CONSOLE</p><h1>Operations at a glance.</h1><p>Manage the people, services, and activity behind Sadhana Mythri.</p></div><button className="secondary-btn" onClick={() => setTab("Users")}>Manage users</button></div>
@@ -102,13 +111,13 @@ export default function AdminDashboard() {
       <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">QUICK ACCESS</p><h2>Operational modules</h2></div></div><div className="admin-shortcuts">{sections.slice(1).map((section) => <button key={section} onClick={() => setTab(section)}>{section}<span>→</span></button>)}</div></section>
     </>;
 
-    if (tab === "Users") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">USERS</p><h2>Account directory</h2></div><span>{number(users.length)} accounts</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Step</th><th>Action</th></tr></thead><tbody>{users.map((account) => <tr key={account.id}><td>{account.full_name}</td><td>{account.email}</td><td><span className={`role-chip ${account.is_admin ? "role-admin" : ""}`}>{account.is_admin ? "Administrator" : "User"}</span></td><td><span className={`kyc-status ${account.account_status === "created" ? "kyc-approved" : account.account_status === "verified" ? "kyc-pending" : ""}`}>{account.account_status === "under_review" ? "Under review" : account.account_status === "verified" ? "Verified" : account.account_status === "created" ? "Created" : "Under review"}</span></td><td>{account.is_admin ? "Protected" : <button className="delete-user-btn" onClick={() => deleteUser(account)}>Delete</button>}</td></tr>)}</tbody></table></div>}</section>;
+    if (tab === "Users") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">USERS</p><h2>Account directory</h2></div><span>{number(users.length)} accounts</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Type</th><th>Role</th><th>Step</th><th>Action</th></tr></thead><tbody>{users.map((account) => <tr key={account.id}><td>{account.full_name}</td><td>{account.email}</td><td>{account.account_type === "business" ? "Business" : "Individual"}</td><td><span className={`role-chip ${account.is_admin ? "role-admin" : ""}`}>{account.is_admin ? "Administrator" : "User"}</span></td><td><span className={`kyc-status ${account.account_status === "created" ? "kyc-approved" : ""}`}>{account.account_status === "created" ? "Created" : "Under review"}</span></td><td>{account.is_admin ? "Protected" : <button className="delete-user-btn" onClick={() => deleteUser(account)}>Delete</button>}</td></tr>)}</tbody></table></div>}</section>;
 
     if (tab === "Plans") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">PLANS</p><h2>Service catalogue</h2></div></div><div className="admin-plan-grid">{plans.map((plan) => <article key={plan.id}><p>{plan.id}</p><h3>{plan.name}</h3><strong>₹{number(plan.price)}</strong><span>{plan.workspace_days} workspace days</span></article>)}</div></section>;
 
     if (tab === "Documents") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">KYC DOCUMENTS</p><h2>Government ID reviews</h2></div><span>{number(verifications.filter((verification) => verification.status === "pending").length)} pending</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>User</th><th>Government ID</th><th>Status</th><th>Decision</th></tr></thead><tbody>{verifications.length ? verifications.map((verification) => <tr key={verification.id}><td><strong>{verification.user_name}</strong><br /><span>{verification.user_email}</span></td><td>{verification.document_type}<br /><span>{verification.document_name}</span><button className="text-btn" onClick={() => viewVerification(verification.id)}>View ID</button></td><td><span className={`kyc-status kyc-${verification.status}`}>{verification.status}</span></td><td>{verification.status === "pending" ? <div className="review-actions"><button className="primary-btn" onClick={() => reviewVerification(verification.id, "approved")}>Accept</button><button className="secondary-btn" onClick={() => reviewVerification(verification.id, "declined")}>Decline</button></div> : "Reviewed"}</td></tr>) : <tr><td colSpan="4">No government IDs have been submitted.</td></tr>}</tbody></table></div>}</section>;
 
-    if (tab === "Subscriptions") return <section className="admin-card"><p className="eyebrow">SUBSCRIPTIONS</p><h2>Subscription operations</h2><p className="admin-module-copy">Subscription review and status management will appear here once the administrative subscription API is connected.</p></section>;
+    if (tab === "Subscriptions") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">SUBSCRIPTIONS</p><h2>Subscription operations</h2></div><span>{number(subscriptions.length)} total</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>User</th><th>Plan</th><th>Status</th><th>Expires</th></tr></thead><tbody>{subscriptions.length ? subscriptions.map((subscription) => <tr key={subscription.id}><td><strong>{subscription.user_name}</strong><br /><span>{subscription.user_email}</span></td><td>{subscription.plan_id}</td><td><span className={`kyc-status kyc-${subscription.status}`}>{subscription.status.replaceAll("_", " ")}</span></td><td>{subscription.expires_at ? new Date(subscription.expires_at).toLocaleDateString("en-IN") : "—"}</td></tr>) : <tr><td colSpan="4">No subscriptions yet.</td></tr>}</tbody></table></div>}</section>;
 
     return <section className="admin-card admin-module"><p className="eyebrow">{tab.toUpperCase()}</p><h2>{tab}</h2><p className="admin-module-copy">{moduleDescriptions[tab]}</p><span>This module is ready for its data source and workflows.</span></section>;
   };

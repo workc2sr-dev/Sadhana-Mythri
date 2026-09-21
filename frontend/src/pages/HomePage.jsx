@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../services/api";
@@ -8,24 +8,30 @@ import citylineImage from "../cityline-background.png";
 import plantImage from "../plant.png";
 import logoImage from "../Elevanta Spaces Logo.png?v=2";
 
+// Features offered by the virtual office service
+// these features should be visible as a slideshow on the homepage
 const features = [
   {
     id: "official-address",
+    n: "1",
     title: "Official Business Address",
     text: "Use a credible business address for registrations and growth.",
   },
   {
     id: "online-registration",
+    n: "2",
     title: "Easy Online Registration & Verification",
     text: "Quick, paperless, and hassle-free onboarding process.",
   },
   {
     id: "subscription-plans",
+    n: "3",
     title: "Flexible Subscription Plans",
     text: "Choose a plan that fits your business needs and budget.",
   },
   {
     id: "billing-dashboard",
+    n: "4", 
     title: "Secure Dashboard for Billing & Management",
     text: "Manage documents, payments and renewals in one place.",
   },
@@ -38,21 +44,27 @@ const steps = [
     title: "Login / Signup",
     text: "Login or create an account with your Gmail and a password to get started with your virtual office address.",
   },
-  /*{
+  {
     id: "register-verify",
     n: "2",
-    title: "Register & Verify",
+    title: "KYC-Verification",
     text: "Complete your details and verify online in minutes.",
-  },*/
+  },
+  {
+    id: "choose-plan",
+    n: "3",
+    title: "Choose a Plan",
+    text: "Select the subscription plan that best fits your business needs.",
+  },
   {
     id: "subscription-approval",
-    n: "2",
+    n: "4",
     title: "Subscription Approval",
     text: "We verify your details and activate your plan.",
   },
   {
     id: "virtual-office",
-    n: "3",
+    n: "5",
     title: "Your Virtual Office Address",
     text: "Use your address for business registration and grow confidently.",
   },
@@ -83,7 +95,7 @@ const plans = [
     featured: true,
   },
   {
-    name: "Enterprise Plan" ,
+    name: "Enterprise Plan",
     /*note: "For growing businesses",*/
     id: "enterprise",
     price: monthlyPlanPrices.enterprise,
@@ -111,6 +123,7 @@ const plans = [
   },
 ];*/
 
+// Renders a checklist bullet with a checkmark icon
 function CheckItem({ children }) {
   return (
     <li>
@@ -120,6 +133,7 @@ function CheckItem({ children }) {
   );
 }
 
+// Public marketing landing page with plans, chat widget, and account menu
 export default function HomePage() {
   const [notice, setNotice] = useState("");
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -132,10 +146,12 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
 
+  // Smoothly scroll to a section by its element id
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Log out, clear OTP state, and close the confirmation dialog
   const signOut = () => {
     logout();
     sessionStorage.removeItem("sadhana_otp_verified");
@@ -143,6 +159,7 @@ export default function HomePage() {
     navigate("/");
   };
 
+  // Send a chat message to the support endpoint and append the reply
   const sendMessage = async (event) => {
     event.preventDefault();
 
@@ -188,7 +205,6 @@ export default function HomePage() {
   const accountSidebarItems = [
     { label: "My Plan", to: "/dashboard/plans" },
     { label: "Update", to: "/dashboard/plans" },
-    { label: "Cancel", to: "/dashboard/plans" },
     { label: "Settings", to: "/dashboard/profile" },
     { label: "Profile", to: "/dashboard/profile" },
     { label: "Applications", to: "/dashboard/applications" },
@@ -196,6 +212,7 @@ export default function HomePage() {
     { label: "Logout", action: "logout" },
   ];
 
+  // Select a plan and route the user to auth, OTP, or plans based on their state
   const choosePlan = async (plan) => {
     setNotice(`${plan.name} selected.`);
     if (isAuthenticated) {
@@ -417,33 +434,42 @@ export default function HomePage() {
       </section>
 
       <section className="feature-strip" id="features">
-        {features.map((feature) => (
-          <article key={feature.id} className="feature-card">
-            <div className="feature-illustration" aria-hidden="true" />
-            <div>
-              <h3><strong>{feature.title}</strong></h3>
-              <p>{feature.text}</p>
-            </div>
-          </article>
-        ))}
+        <div className="marquee">
+          <div className="marquee-track marquee-track-reverse">
+            {[...features, ...features].map((feature, index) => (
+              <article key={`${feature.id}-${index}`} className="feature-card">
+                <div className="feature-illustration" aria-hidden="true" />
+                <div>
+                  <h3><strong>{feature.title}</strong></h3>
+                  <p>{feature.text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
+ 
 
+         {/* HOW IT WORKS SECTION*/} 
       <section className="how-it-works" id="solutions">
         <p className="section-title">How It Works</p>
-        <div className="steps vertical">
-          {steps.map((step) => (
-            <article key={step.id} className="step">
-              <div className="step-circle">{step.n}</div>
-              <div className="step-body">
-                <h3><strong>{step.title}</strong></h3>
-                <p>{step.text}</p>
-              </div>
-              <div className="step-line" aria-hidden="false" />
-            </article>
-          ))}
+        <div className="marquee">
+          <div className="marquee-track">
+            {[...steps, ...steps].map((step, index) => (
+              <article key={`${step.id}-${index}`} className="step">
+                <div className="step-circle">{step.n}</div>
+                <div className="step-body">
+                  <h3><strong>{step.title}</strong></h3>
+                  <p>{step.text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
+
+      {/* How the pricing works */}
       <section className="pricing-area" id="plans">
         <div className="plans-column">
           {plans.map((plan) => (
@@ -509,6 +535,9 @@ export default function HomePage() {
         <span>24x7 Customer Support</span>
       </section>*/}
 
+
+
+     {/* blue banner*/}
       <section className="cta-band">
         <div className="cta-image left" aria-hidden="true" />
         <div className="cta-content">

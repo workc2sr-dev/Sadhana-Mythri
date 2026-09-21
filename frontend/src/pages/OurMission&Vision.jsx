@@ -1,5 +1,6 @@
 import InfoPage from "../components/InfoPage";
 
+// Static mission and vision information page
 export default function MissionVisionPage() {
   return (
     <InfoPage

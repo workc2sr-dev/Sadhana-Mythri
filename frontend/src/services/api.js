@@ -1,5 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
+// Perform an authenticated fetch to the backend API and parse the JSON response
 async function request(path, options = {}) {
   const token = localStorage.getItem("sadhana_token");
   const isFormData = options.body instanceof FormData;
@@ -27,8 +28,12 @@ export const api = {
     }),
   login: (payload) =>
     request("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
+  getCurrentUser: () => request("/auth/me"),
   getSubscriptions: () => request("/subscriptions"),
   getVerification: () => request("/verification"),
+  getBusinessDetails: () => request("/business-details"),
+  submitBusinessDetails: (payload) =>
+    request("/business-details", { method: "POST", body: JSON.stringify(payload) }),
   submitVerification: (documentType, document) => {
     const body = new FormData();
     body.append("document_type", documentType);
@@ -40,8 +45,23 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ plan_id }),
     }),
+  cancelSubscription: (subscriptionId) =>
+    request(`/subscriptions/${subscriptionId}`, { method: "DELETE" }),
+  renewSubscription: (subscriptionId) =>
+    request(`/subscriptions/${subscriptionId}/renew`, { method: "POST" }),
+  createPaymentOrder: (amount, receipt) =>
+    request("/payments/create-order", {
+      method: "POST",
+      body: JSON.stringify({ amount, currency: "INR", receipt }),
+    }),
+  verifyPayment: (payload) =>
+    request("/payments/verify-payment", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   getInvoices: () => request("/invoices"),
   getAdminUsers: () => request("/admin/users"),
+  getAdminSubscriptions: () => request("/admin/subscriptions"),
   deleteAdminUser: (userId) => request(`/admin/users/${userId}`, { method: "DELETE" }),
   getAdminVerifications: () => request("/admin/verifications"),
   reviewVerification: (verificationId, reviewStatus) =>

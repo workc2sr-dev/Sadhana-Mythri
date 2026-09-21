@@ -1,5 +1,6 @@
 import InfoPage from "../components/InfoPage";
 
+// Static privacy policy information page
 export default function PrivacyPage() {
   return (
     <InfoPage

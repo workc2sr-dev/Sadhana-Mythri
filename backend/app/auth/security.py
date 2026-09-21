@@ -15,14 +15,17 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 20
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
+# Hash a plaintext password for storage
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
+# Check a plaintext password against its stored hash
 def verify_password(password: str, hashed: str) -> bool:
     return pwd_context.verify(password, hashed)
 
 
+# Create a signed JWT access token for the given user
 def create_token(user_id: int, expires_at: datetime | None = None) -> str:
     expires_at = expires_at or (
         datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -34,6 +37,7 @@ def create_token(user_id: int, expires_at: datetime | None = None) -> str:
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
+# Resolve the authenticated user from the request's bearer token
 def get_current_user(
     token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ) -> User:
@@ -52,6 +56,7 @@ def get_current_user(
     return user
 
 
+# Ensure the current user has admin privileges, raising otherwise
 def get_admin_user(user: User = Depends(get_current_user)) -> User:
     if not user.is_admin:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Administrator access required")

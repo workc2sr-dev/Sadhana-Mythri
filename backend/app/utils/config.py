@@ -14,6 +14,8 @@ class Settings:
     admin_name = os.getenv("ADMIN_NAME", "Sadhana Mythri ADMIN")
     admin_email = os.getenv("ADMIN_EMAIL", "admin@sadhanamythri.com")
     admin_password = os.getenv("ADMIN_PASSWORD")
+    razorpay_key_id = os.getenv("RAZORPAY_KEY_ID")
+    razorpay_key_secret = os.getenv("RAZORPAY_KEY_SECRET")
 
 
 settings = Settings()

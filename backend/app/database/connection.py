@@ -11,6 +11,7 @@ class Base(DeclarativeBase):
     pass
 
 
+# FastAPI dependency that yields a DB session and ensures it is closed after use
 def get_db():
     db = SessionLocal()
     try:

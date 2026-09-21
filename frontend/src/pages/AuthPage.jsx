@@ -3,9 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { api } from "../services/api";
 
+// Combined login/register page that redirects to OTP verification after auth
 export default function AuthPage() {
   const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ full_name: "", email: "", password: "" });
+  const [form, setForm] = useState({ full_name: "", email: "", password: "", account_type: "individual" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function AuthPage() {
   const { login, register } = useAuth();
   const planId = searchParams.get("plan");
 
+  // Submit the login or register form and route the user to the next step
   const submit = async (event) => {
     event.preventDefault();
     setBusy(true);
@@ -49,6 +51,14 @@ export default function AuthPage() {
         <form className="empty-panel auth-form" onSubmit={submit}>
           {planId && <p>You’ll continue with your selected plan after signing in.</p>}
           {mode === "register" && <label>Full name<input required minLength="2" value={form.full_name} onChange={(event) => setForm({ ...form, full_name: event.target.value })} /></label>}
+          {mode === "register" && (
+            <label>Account type
+              <div className="role-toggle">
+                <button type="button" className={form.account_type === "individual" ? "role-option active" : "role-option"} onClick={() => setForm({ ...form, account_type: "individual" })}>Individual</button>
+                <button type="button" className={form.account_type === "business" ? "role-option active" : "role-option"} onClick={() => setForm({ ...form, account_type: "business" })}>Business</button>
+              </div>
+            </label>
+          )}
           <label>Email address<input required type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
           <label>Password<input required minLength="8" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></label>
           {error && <p className="form-error" role="alert">{error}</p>}

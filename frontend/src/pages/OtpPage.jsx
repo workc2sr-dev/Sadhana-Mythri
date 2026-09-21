@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { api } from "../services/api";
 
+// One-time password confirmation step shown after login/register
 export default function OtpPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -10,20 +12,39 @@ export default function OtpPage() {
   const [error, setError] = useState("");
   const planId = searchParams.get("plan");
   const notice = searchParams.get("notice");
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const returnPath = user?.is_admin ? "/admin" : "/";
 
   useEffect(() => { sessionStorage.setItem("sadhana_otp", otp); }, [otp]);
 
-  const verify = (event) => {
+  // Validate the entered OTP and route to the next required step
+  const verify = async (event) => {
     event.preventDefault();
     if (value !== otp) { setError("That OTP does not match. Please try again."); return; }
     sessionStorage.setItem("sadhana_otp_verified", "true");
     sessionStorage.removeItem("sadhana_otp");
-    const destination = planId ? `/payment?plan=${planId}` : returnPath;
-    navigate(destination, { replace: true });
+
+    if (!planId) { navigate(returnPath, { replace: true }); return; }
+
+    // Customer/business details and KYC must be submitted and approved before a plan can go to payment.
+    try {
+      const [freshUser, verification, businessDetails] = await Promise.all([
+        refreshUser(),
+        api.getVerification(),
+        api.getBusinessDetails().catch(() => null),
+      ]);
+      if (!businessDetails) {
+        navigate(`/business-details?plan=${planId}`, { replace: true });
+        return;
+      }
+      const kycApproved = verification?.status === "approved" && freshUser?.account_status === "created";
+      navigate(kycApproved ? `/payment?plan=${planId}` : `/dashboard/plans?plan=${planId}&kyc=required`, { replace: true });
+    } catch {
+      navigate(`/business-details?plan=${planId}`, { replace: true });
+    }
   };
 
+  // Generate and store a fresh on-screen OTP
   const resend = () => {
     const nextOtp = String(Math.floor(100000 + Math.random() * 900000));
     setOtp(nextOtp);

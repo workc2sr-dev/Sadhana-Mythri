@@ -23,7 +23,7 @@ html {
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top center, #bae3b4 45%, #bae3b4 45%, #f6f0e5 100%);
+    radial-gradient(circle at top center, #bae3b4 45%, #d6ddd5 50%, #f6f0e5 100%);
   color: var(--deep);
   font-family: "Inter",;
   font-size: 17px;
@@ -153,6 +153,29 @@ a {
   border-radius: 4px;
   padding: 12px;
   font: inherit;
+}
+
+.role-toggle {
+  display: flex;
+  gap: 10px;
+}
+
+.role-option {
+  flex: 1;
+  border: 1px solid #cbd6d0;
+  border-radius: 4px;
+  padding: 12px;
+  background: #fff;
+  color: var(--deep);
+  font-weight: 700;
+  font: inherit;
+  cursor: pointer;
+}
+
+.role-option.active {
+  background: var(--deep);
+  color: #fff;
+  border-color: var(--deep);
 }
 
 .text-btn {
@@ -971,8 +994,7 @@ a {
 .feature-strip {
   margin: 20px auto 0;
   width: min(1440px, calc(100% - 6.4vw));
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  padding: 14px 10px 18px;
   background: rgba(255, 255, 255, 0.94);
   border-radius: 16px;
   box-shadow: var(--soft-shadow);
@@ -985,11 +1007,38 @@ a {
   display: flex;
   align-items: center;
   gap: 16px;
-  border-right: 1px solid rgba(36, 75, 60, 0.08);
+  width: 340px;
+  flex: 0 0 auto;
 }
 
-.feature-card:last-child {
-  border-right: 0;
+/* Continuous auto-scrolling marquee shared by the feature strip and how-it-works sections */
+.marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 28s linear infinite;
+}
+
+.marquee-track.marquee-track-reverse {
+  animation-direction: reverse;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 .feature-illustration {
@@ -1029,7 +1078,7 @@ a {
 }
 
 .how-it-works {
-  padding: 60px 7.2vw 34px;
+  padding: 60px 0.1px;
   width: min(1440px, calc(100% - 6.4vw));
   margin: 0 auto;
 }
@@ -1041,22 +1090,18 @@ a {
   font-size: 60px;
   letter-spacing: 0;
   color: var(--deep);
-  margin-bottom: 20px;
-}
-
-.steps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 100px;
+  margin-bottom: 10px;
 }
 
 .step {
   position: relative;
   display: grid;
   grid-template-columns: 40px 1fr;
-  gap: 17px;
+  gap: 20px;
   align-items: start;
-  padding-top: 10px;
+  padding: 10px 24px 0 0;
+  width: 380px;
+  flex: 0 0 auto;
 }
 
 .step-circle {
@@ -1067,22 +1112,11 @@ a {
   place-items: center;
   color: #ffffff;
   background: var(--deep);
-  border: 2px solid #d9dfd3;
+  border: 3px solid #d9dfd3;
   font-weight: 900;
 }
 
-.step-line {
-  position: absolute;
-  top: 28px;
-  left: 58px;
-  right: -8px;
-  height: 2px;
-  background: linear-gradient(90deg, var(--deep), rgba(36, 75, 60, 0.35));
-} 
 
-.step:last-child .step-line {
-  display: block;
-}
 
 /* Pricing and Testimonials */
 .pricing-area {
@@ -2044,10 +2078,9 @@ a {
   }
 
   .feature-strip {
-    grid-template-columns: repeat(2, 1fr);
+    padding: 10px 4px 14px;
   }
 
-  .steps,
   .plans-column,
   .plans-page-grid,
   .testimonial-grid,
@@ -2139,8 +2172,6 @@ a {
     top: 120px;
   }
 
-  .feature-strip,
-  .steps,
   .plans-column,
   .plans-page-grid,
   .testimonial-grid,
@@ -2153,8 +2184,13 @@ a {
     width: calc(100% - 10vw);
   }
 
-  .step-line {
-    display: none;
+  .feature-card {
+    width: 260px;
+  }
+
+  .step {
+    width: 300px;
+    grid-template-columns: 32px 1fr;
   }
 
   .cta-band {

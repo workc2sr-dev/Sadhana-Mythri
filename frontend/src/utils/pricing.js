@@ -4,4 +4,5 @@ export const monthlyPlanPrices = Object.freeze({
   enterprise: 6999,
 });
 
+// Compute the annual price from a monthly price
 export const annualPlanPrice = (monthlyPrice) => monthlyPrice * 12;

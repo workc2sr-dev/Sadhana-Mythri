@@ -11,6 +11,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    account_type: Mapped[str] = mapped_column(String(20), default="individual")
     account_status: Mapped[str] = mapped_column(String(30), default="under_review")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -30,6 +31,22 @@ class Subscription(Base):
     plan_id: Mapped[str] = mapped_column(ForeignKey("plans.id"))
     status: Mapped[str] = mapped_column(String(30), default="under_review")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class BusinessDetail(Base):
+    __tablename__ = "business_details"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
+    business_name: Mapped[str] = mapped_column(String(150))
+    business_type: Mapped[str] = mapped_column(String(80))
+    gst_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    phone: Mapped[str] = mapped_column(String(20))
+    address_line: Mapped[str] = mapped_column(String(255))
+    city: Mapped[str] = mapped_column(String(100))
+    state: Mapped[str] = mapped_column(String(100))
+    pincode: Mapped[str] = mapped_column(String(10))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class Verification(Base):
@@ -48,6 +65,8 @@ class Invoice(Base):
     __tablename__ = "invoices"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    subscription_id: Mapped[int | None] = mapped_column(ForeignKey("subscriptions.id"), nullable=True)
+    plan_id: Mapped[str | None] = mapped_column(String(30), nullable=True)
     amount: Mapped[int] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(String(30), default="unpaid")
     issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

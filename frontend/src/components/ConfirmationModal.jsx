@@ -1,3 +1,4 @@
+// Reusable confirm/cancel dialog shown as a modal overlay
 export default function ConfirmationModal({
   open,
   title,

@@ -10,6 +10,7 @@ const planCatalog = {
   enterprise: "Enterprise Plan",
 };
 
+// Shows the user's subscription/application history and statuses
 export default function ApplicationsPage() {
   const [applications, setApplications] = useState([]);
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function ApplicationsPage() {
     api.getSubscriptions().then(setApplications).catch(() => setApplications([]));
   }, [isAuthenticated, navigate]);
 
+  // Log out and return to the homepage
   const signOut = () => {
     logout();
     navigate("/");

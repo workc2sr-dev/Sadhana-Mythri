@@ -43,10 +43,12 @@ const plans = [
   },
 ];
 
+// Public plan selection page that routes to the correct onboarding step
 export default function PlansPage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
+  // Route the user to payment, documentation, or auth based on their plan/verification state
   const choosePlan = async (planId) => {
     if (isAuthenticated) {
       try {
@@ -58,8 +60,15 @@ export default function PlansPage() {
           navigate("/dashboard?notice=one-plan");
           return;
         }
+
+        // Already-verified, onboarded users can skip straight to payment instead of re-doing OTP/KYC.
+        const verification = await api.getVerification();
+        if (user?.account_status === "created" && verification?.status === "approved") {
+          navigate(`/payment?plan=${planId}`);
+          return;
+        }
       } catch {
-        // The payment endpoint still enforces the one-plan rule if this check cannot load.
+        // Fall back to the full onboarding flow if these checks cannot load.
       }
     }
 

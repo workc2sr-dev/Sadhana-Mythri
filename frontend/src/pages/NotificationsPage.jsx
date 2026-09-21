@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PortalLayout from "../layouts/PortalLayout";
 import { useAuth } from "../hooks/useAuth";
 
+// Placeholder page for account notifications
 export default function NotificationsPage() {
   const navigate = useNavigate();
   const { logout, isAuthenticated } = useAuth();
@@ -11,6 +12,7 @@ export default function NotificationsPage() {
     if (!isAuthenticated) navigate("/auth", { replace: true });
   }, [isAuthenticated, navigate]);
 
+  // Log out and return to the homepage
   const signOut = () => {
     logout();
     navigate("/");

@@ -1,7 +1,10 @@
+import hashlib
+import hmac
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
+import razorpay
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -15,8 +18,14 @@ from app.auth.security import (
     verify_password,
 )
 from app.database.connection import get_db
-from app.models.models import Invoice, Plan, Subscription, User, Verification
+from app.models.models import BusinessDetail, Invoice, Plan, Subscription, User, Verification
 from app.schemas.schemas import (
+    AdminSubscriptionResponse,
+    BusinessDetailsCreate,
+    BusinessDetailsResponse,
+    CreateOrderRequest,
+    CreateOrderResponse,
+    InvoiceResponse,
     LoginRequest,
     PlanResponse,
     RegisterRequest,
@@ -26,17 +35,22 @@ from app.schemas.schemas import (
     UserResponse,
     VerificationResponse,
     VerificationReview,
+    VerifyPaymentRequest,
+    VerifyPaymentResponse,
 )
 from app.services.seed import ensure_admin, ensure_plans
+from app.utils.config import settings
 
 router = APIRouter()
 KYC_UPLOAD_DIR = Path(__file__).resolve().parents[2] / "uploads" / "kyc"
 ACTIVE_SUBSCRIPTION_STATUSES = ("under_review", "approved", "active")
-ACCOUNT_STATUS_LABELS = {
-    "under_review": "Under review",
-    "verified": "Verified",
-    "created": "Created",
-}
+
+
+# Build a Razorpay SDK client from configured API credentials
+def get_razorpay_client() -> razorpay.Client:
+    if not settings.razorpay_key_id or not settings.razorpay_key_secret:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Razorpay credentials are not configured")
+    return razorpay.Client(auth=(settings.razorpay_key_id, settings.razorpay_key_secret))
 
 
 class SupportChatRequest(BaseModel):
@@ -44,24 +58,19 @@ class SupportChatRequest(BaseModel):
     history: list[dict[str, str]] = []
 
 
+# Recompute and persist a user's account status based on verification/admin state
 def sync_account_status(user: User, db: Session) -> str:
     verification = db.query(Verification).filter(Verification.user_id == user.id).first()
-    if verification and verification.status == "approved" and verification.reviewed_at:
-        if datetime.utcnow() - verification.reviewed_at >= timedelta(days=1):
-            user.account_status = "created"
-        else:
-            user.account_status = "verified"
-    elif user.is_admin:
+    if user.is_admin or (verification and verification.status == "approved"):
         user.account_status = "created"
-    elif verification and verification.status in {"pending", "declined"}:
-        user.account_status = "under_review"
-    elif not verification:
+    else:
         user.account_status = "under_review"
     db.add(user)
     db.commit()
     return user.account_status
 
 
+# Seed the admin user and default plans when the app starts up
 @router.on_event("startup")
 def seed_initial_data():
     # The database session dependency is not available during application startup.
@@ -74,6 +83,7 @@ def seed_initial_data():
         db.close()
 
 
+# Register a new user account
 @router.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == payload.email).first():
@@ -83,6 +93,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         full_name=payload.full_name,
         email=payload.email,
         password_hash=hash_password(payload.password),
+        account_type=payload.account_type,
         account_status="under_review",
     )
     db.add(user)
@@ -91,11 +102,12 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     return user
 
 
+# Authenticate a user and issue an access token
 @router.post("/auth/login")
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.password_hash):
-        raise HTTPException(401, "Incorrect email or password")
+        raise HTTPException(401, "something went wrong, please try again")
 
     sync_account_status(user, db)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -108,17 +120,28 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     }
 
 
+# Return the currently authenticated user's profile
+@router.get("/auth/me", response_model=UserResponse)
+def get_me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    sync_account_status(user, db)
+    db.refresh(user)
+    return user
+
+
+# List all available subscription plans
 @router.get("/plans", response_model=list[PlanResponse])
 def list_plans(db: Session = Depends(get_db)):
     ensure_plans(db)
     return db.query(Plan).all()
 
 
+# List the current user's subscriptions
 @router.get("/subscriptions", response_model=list[SubscriptionResponse])
 def subscriptions(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return db.query(Subscription).filter(Subscription.user_id == user.id).all()
 
 
+# Create a new subscription for the user after validating eligibility, then invoice it
 @router.post("/subscriptions", response_model=SubscriptionResponse, status_code=status.HTTP_201_CREATED)
 def create_subscription(
     payload: SubscriptionCreate,
@@ -143,18 +166,146 @@ def create_subscription(
         raise HTTPException(status.HTTP_409_CONFLICT, "One plan per account")
 
     sync_account_status(user, db)
-    sync_account_status(user, db)
     verification = db.query(Verification).filter(Verification.user_id == user.id).first()
     if user.account_status != "created" or not verification or verification.status != "approved":
         raise HTTPException(403, "Government ID verification must be approved and the account must be created before subscribing")
 
-    subscription = Subscription(user_id=user.id, plan_id=payload.plan_id, status="under_review")
+    business_details = db.query(BusinessDetail).filter(BusinessDetail.user_id == user.id).first()
+    if not business_details:
+        raise HTTPException(403, "Customer/business details must be submitted before subscribing")
+
+    plan = db.get(Plan, payload.plan_id)
+    now = datetime.utcnow()
+    subscription = Subscription(
+        user_id=user.id,
+        plan_id=payload.plan_id,
+        status="active",
+        expires_at=now + timedelta(days=365),
+    )
+    db.add(subscription)
+    db.commit()
+    db.refresh(subscription)
+
+    # Payment was already verified before this call; generate the annual invoice now.
+    invoice = Invoice(
+        user_id=user.id,
+        subscription_id=subscription.id,
+        plan_id=plan.id,
+        amount=plan.price * 12,
+        status="paid",
+    )
+    db.add(invoice)
+    db.commit()
+    return subscription
+
+
+# Renew an existing active subscription for another year and generate an invoice
+@router.post("/subscriptions/{subscription_id}/renew", response_model=SubscriptionResponse)
+def renew_subscription(
+    subscription_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    subscription = db.get(Subscription, subscription_id)
+    if not subscription or subscription.user_id != user.id:
+        raise HTTPException(404, "Subscription not found")
+    if subscription.status not in ACTIVE_SUBSCRIPTION_STATUSES:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Only an active plan can be renewed")
+
+    plan = db.get(Plan, subscription.plan_id)
+    if not plan:
+        raise HTTPException(404, "Plan not found")
+
+    now = datetime.utcnow()
+    base_date = subscription.expires_at if subscription.expires_at and subscription.expires_at > now else now
+    subscription.expires_at = base_date + timedelta(days=365)
+    subscription.status = "active"
+    db.add(subscription)
+    db.commit()
+    db.refresh(subscription)
+
+    invoice = Invoice(
+        user_id=user.id,
+        subscription_id=subscription.id,
+        plan_id=plan.id,
+        amount=plan.price * 12,
+        status="paid",
+    )
+    db.add(invoice)
+    db.commit()
+    return subscription
+
+
+# Cancel an active subscription
+@router.delete("/subscriptions/{subscription_id}", response_model=SubscriptionResponse)
+def cancel_subscription(
+    subscription_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    subscription = db.get(Subscription, subscription_id)
+    if not subscription or subscription.user_id != user.id:
+        raise HTTPException(404, "Subscription not found")
+    if subscription.status not in ACTIVE_SUBSCRIPTION_STATUSES:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Only an active plan can be cancelled")
+
+    subscription.status = "cancelled"
     db.add(subscription)
     db.commit()
     db.refresh(subscription)
     return subscription
 
 
+# Create a Razorpay order for the client to complete payment against
+@router.post("/payments/create-order", response_model=CreateOrderResponse)
+def create_payment_order(payload: CreateOrderRequest, user: User = Depends(get_current_user)):
+    if payload.amount < 100:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Amount must be at least 100 paise")
+
+    client = get_razorpay_client()
+    try:
+        order = client.order.create(
+            {
+                "amount": payload.amount,
+                "currency": payload.currency,
+                "receipt": payload.receipt or f"receipt_{user.id}_{uuid4().hex[:8]}",
+            }
+        )
+    except razorpay.errors.BadRequestError as error:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(error))
+    except Exception as error:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Unable to create Razorpay order: {error}")
+
+    return CreateOrderResponse(
+        order_id=order["id"],
+        amount=order["amount"],
+        currency=order["currency"],
+        key_id=settings.razorpay_key_id,
+    )
+
+
+# Verify a Razorpay payment signature to confirm the transaction is genuine
+@router.post("/payments/verify-payment", response_model=VerifyPaymentResponse)
+def verify_payment(payload: VerifyPaymentRequest, user: User = Depends(get_current_user)):
+    if not payload.razorpay_order_id or not payload.razorpay_payment_id or not payload.razorpay_signature:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Missing payment verification fields")
+    if not settings.razorpay_key_secret:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Razorpay credentials are not configured")
+
+    payload_body = f"{payload.razorpay_order_id}|{payload.razorpay_payment_id}"
+    expected_signature = hmac.new(
+        settings.razorpay_key_secret.encode(),
+        payload_body.encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected_signature, payload.razorpay_signature):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Payment signature verification failed")
+
+    return VerifyPaymentResponse(success=True)
+
+
+# Fetch the current user's government ID verification status
 @router.get("/verification", response_model=VerificationResponse)
 def get_verification(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     verification = db.query(Verification).filter(Verification.user_id == user.id).first()
@@ -163,6 +314,7 @@ def get_verification(user: User = Depends(get_current_user), db: Session = Depen
     return verification
 
 
+# Upload a government ID document for KYC verification
 @router.post("/verification", response_model=VerificationResponse, status_code=status.HTTP_201_CREATED)
 async def submit_verification(
     document_type: str = Form(...),
@@ -200,6 +352,7 @@ async def submit_verification(
     return verification
 
 
+# List all pending/reviewed verifications for admin review
 @router.get("/admin/verifications", response_model=list[AdminVerificationResponse])
 def admin_verifications(_: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     rows = db.query(Verification, User).join(User, Verification.user_id == User.id).order_by(Verification.created_at.desc()).all()
@@ -219,6 +372,7 @@ def admin_verifications(_: User = Depends(get_admin_user), db: Session = Depends
     ]
 
 
+# Approve or decline a user's submitted verification and update account status
 @router.patch("/admin/verifications/{verification_id}", response_model=VerificationResponse)
 def review_verification(
     verification_id: int,
@@ -235,10 +389,7 @@ def review_verification(
 
     account = db.get(User, verification.user_id)
     if account:
-        if payload.status == "approved":
-            account.account_status = "verified"
-        else:
-            account.account_status = "under_review"
+        account.account_status = "created" if payload.status == "approved" else "under_review"
         db.add(account)
 
     db.commit()
@@ -246,6 +397,7 @@ def review_verification(
     return verification
 
 
+# Download the uploaded government ID document for admin review
 @router.get("/admin/verifications/{verification_id}/document")
 def get_verification_document(
     verification_id: int,
@@ -259,6 +411,7 @@ def get_verification_document(
     return FileResponse(document_path, filename=verification.document_name or document_path.name)
 
 
+# Handle a support chat message with a canned response
 @router.post("/chat/support")
 async def support_chat(payload: SupportChatRequest):
     user_message = (payload.message or "").strip()
@@ -274,11 +427,64 @@ async def support_chat(payload: SupportChatRequest):
     }
 
 
-@router.get("/invoices")
+# List the current user's invoices, most recent first
+@router.get("/invoices", response_model=list[InvoiceResponse])
 def invoices(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return db.query(Invoice).filter(Invoice.user_id == user.id).all()
+    return db.query(Invoice).filter(Invoice.user_id == user.id).order_by(Invoice.issued_at.desc()).all()
 
 
+# Fetch the current user's saved business details, if any
+@router.get("/business-details", response_model=BusinessDetailsResponse | None)
+def get_business_details(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return db.query(BusinessDetail).filter(BusinessDetail.user_id == user.id).first()
+
+
+# Create or update the current user's business details
+@router.post("/business-details", response_model=BusinessDetailsResponse, status_code=status.HTTP_201_CREATED)
+def submit_business_details(
+    payload: BusinessDetailsCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    details = db.query(BusinessDetail).filter(BusinessDetail.user_id == user.id).first()
+    if not details:
+        details = BusinessDetail(user_id=user.id)
+        db.add(details)
+    for field, value in payload.model_dump().items():
+        setattr(details, field, value)
+    # Individual/personal customers may skip a business name; fall back to their account name.
+    if not details.business_name:
+        details.business_name = user.full_name
+    db.commit()
+    db.refresh(details)
+    return details
+
+
+# List all subscriptions across users for the admin dashboard
+@router.get("/admin/subscriptions", response_model=list[AdminSubscriptionResponse])
+def admin_subscriptions(_: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    rows = (
+        db.query(Subscription, User)
+        .join(User, Subscription.user_id == User.id)
+        .order_by(Subscription.created_at.desc())
+        .all()
+    )
+    return [
+        AdminSubscriptionResponse(
+            id=subscription.id,
+            plan_id=subscription.plan_id,
+            status=subscription.status,
+            created_at=subscription.created_at,
+            expires_at=subscription.expires_at,
+            user_id=account.id,
+            user_name=account.full_name,
+            user_email=account.email,
+        )
+        for subscription, account in rows
+    ]
+
+
+# List all registered users for the admin directory
 @router.get("/admin/users", response_model=list[UserResponse])
 def admin_users(_: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     # Ignore incomplete legacy records so the administrative directory only
@@ -286,6 +492,7 @@ def admin_users(_: User = Depends(get_admin_user), db: Session = Depends(get_db)
     return db.query(User).filter(User.email != "").all()
 
 
+# Permanently delete a user account and all related records/files
 @router.delete("/admin/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(
     user_id: int,
@@ -304,6 +511,7 @@ def delete_user(
         db.query(Invoice).filter(Invoice.user_id == account.id).delete(synchronize_session=False)
         db.query(Subscription).filter(Subscription.user_id == account.id).delete(synchronize_session=False)
         db.query(Verification).filter(Verification.user_id == account.id).delete(synchronize_session=False)
+        db.query(BusinessDetail).filter(BusinessDetail.user_id == account.id).delete(synchronize_session=False)
         db.delete(account)
         db.commit()
     except Exception:

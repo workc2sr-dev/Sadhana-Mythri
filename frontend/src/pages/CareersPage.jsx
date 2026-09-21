@@ -1,5 +1,6 @@
 import InfoPage from "../components/InfoPage";
 
+// Static careers information page
 export default function CareersPage() {
   return (
     <InfoPage
