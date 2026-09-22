@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, LargeBinary, String
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database.connection import Base
 
@@ -56,7 +56,8 @@ class Verification(Base):
     status: Mapped[str] = mapped_column(String(30), default="not_started")
     document_type: Mapped[str | None] = mapped_column(String(80), nullable=True)
     document_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    document_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    document_content_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    document_data: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 

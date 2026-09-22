@@ -1,12 +1,11 @@
 import hashlib
 import hmac
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from uuid import uuid4
 
 import razorpay
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.auth.security import (
@@ -42,7 +41,6 @@ from app.services.seed import ensure_admin, ensure_plans
 from app.utils.config import settings
 
 router = APIRouter()
-KYC_UPLOAD_DIR = Path(__file__).resolve().parents[2] / "uploads" / "kyc"
 ACTIVE_SUBSCRIPTION_STATUSES = ("under_review", "approved", "active")
 
 
@@ -333,18 +331,13 @@ async def submit_verification(
     if verification and verification.status == "approved":
         raise HTTPException(409, "Your government ID is already approved")
 
-    KYC_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    suffix = Path(document.filename or "document").suffix.lower()
-    stored_name = f"{user.id}-{uuid4().hex}{suffix}"
-    stored_path = KYC_UPLOAD_DIR / stored_name
-    stored_path.write_bytes(contents)
-
     if not verification:
         verification = Verification(user_id=user.id)
         db.add(verification)
     verification.document_type = document_type.strip()[:80]
     verification.document_name = document.filename or "Government ID"
-    verification.document_path = str(stored_path)
+    verification.document_content_type = document.content_type
+    verification.document_data = contents
     verification.status = "pending"
     verification.reviewed_at = None
     db.commit()
@@ -405,10 +398,14 @@ def get_verification_document(
     db: Session = Depends(get_db),
 ):
     verification = db.get(Verification, verification_id)
-    document_path = Path(verification.document_path) if verification and verification.document_path else None
-    if not document_path or not document_path.is_file():
+    if not verification or not verification.document_data:
         raise HTTPException(404, "Government ID file not found")
-    return FileResponse(document_path, filename=verification.document_name or document_path.name)
+    filename = verification.document_name or "document"
+    return Response(
+        content=verification.document_data,
+        media_type=verification.document_content_type or "application/octet-stream",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
 
 
 # Handle a support chat message with a canned response
@@ -505,8 +502,6 @@ def delete_user(
     if account.id == admin.id or account.is_admin:
         raise HTTPException(403, "Administrator accounts cannot be deleted")
 
-    verifications = db.query(Verification).filter(Verification.user_id == account.id).all()
-    document_paths = [Path(verification.document_path) for verification in verifications if verification.document_path]
     try:
         db.query(Invoice).filter(Invoice.user_id == account.id).delete(synchronize_session=False)
         db.query(Subscription).filter(Subscription.user_id == account.id).delete(synchronize_session=False)
@@ -517,7 +512,3 @@ def delete_user(
     except Exception:
         db.rollback()
         raise
-
-    for document_path in document_paths:
-        if document_path.is_file():
-            document_path.unlink()

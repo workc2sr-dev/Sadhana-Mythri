@@ -7,7 +7,11 @@ load_dotenv()
 class Settings:
     database_url = os.getenv("DATABASE_URL")
     secret_key = os.getenv("SECRET_KEY", "change-this-secret-in-production")
-    frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+    frontend_origins = [
+        origin.strip()
+        for origin in os.getenv("FRONTEND_ORIGIN", "http://localhost:5173").split(",")
+        if origin.strip()
+    ]
     admin_name = os.getenv("ADMIN_NAME", "Sadhana Mythri ADMIN")
     admin_email = os.getenv("ADMIN_EMAIL", "admin@sadhanamythri.com")
     admin_password = os.getenv("ADMIN_PASSWORD")
@@ -16,3 +20,6 @@ class Settings:
 
 
 settings = Settings()
+
+if not settings.database_url:
+    raise RuntimeError("DATABASE_URL environment variable is required")
