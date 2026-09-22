@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import BackButton from "../components/BackButton";
 import HomePage from "../pages/HomePage";
 import Dashboard from "../pages/Dashboard";
 import PlansPage from "../pages/PlansPage";
@@ -25,6 +26,7 @@ import InvoicesPage from "../pages/InvoicesPage";
 export default function AppRouter() {
   return (
     <BrowserRouter>
+      <BackButton />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/plans" element={<PlansPage />} />
