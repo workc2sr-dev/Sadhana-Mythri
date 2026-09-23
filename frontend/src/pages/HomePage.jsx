@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { api } from "../services/api";
+import { api, API_URL } from "../services/api";
 import ConfirmationModal from "../components/ConfirmationModal";
 import { monthlyPlanPrices } from "../utils/pricing";
 import citylineImage from "../cityline-background.png";
@@ -172,7 +172,7 @@ export default function HomePage() {
     setMessage("");
 
     try {
-      const response = await fetch("/api/chat/support", {
+      const response = await fetch(`${API_URL}/chat/support`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -238,7 +238,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className={`landing${isAuthenticated && !user?.is_admin ? " landing-authenticated" : ""}`}>
+    <main className={`landing home-page${isAuthenticated && !user?.is_admin ? " landing-authenticated" : ""}`}>
       <header className="site-header">
         <a className="brand-block" href="#home" onClick={() => scrollToSection("home")}>
           <img className="brand-logo" src={logoImage} alt="Sadhana Mythri" />
@@ -290,6 +290,7 @@ export default function HomePage() {
         </div>
       </header>
 
+      <div className="landing-scroll">
       <ConfirmationModal
         open={logoutOpen}
         title="Log out"
@@ -732,6 +733,7 @@ export default function HomePage() {
           </button>
         </div>
       )}
+      </div>
     </main>
   );
 }

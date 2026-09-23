@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+export const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 // Perform an authenticated fetch to the backend API and parse the JSON response
 async function request(path, options = {}) {

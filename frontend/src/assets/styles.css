@@ -18,10 +18,12 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top center, #bae3b4 45%, #d6ddd5 50%, #f6f0e5 100%);
   color: var(--deep);
@@ -68,7 +70,19 @@ a {
 
 .landing {
   position: relative;
+}
+
+.home-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+}
+
+.landing-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .landing-authenticated {
@@ -239,8 +253,7 @@ a {
   background: rgba(255, 250, 242, 0.9);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(56, 77, 63, 0.08);
-  position: sticky;
-  top: 0;
+  flex: 0 0 auto;
   z-index: 10;
 }
 .brand-block {
