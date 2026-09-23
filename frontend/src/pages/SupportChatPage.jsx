@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../services/api";
 
 const welcomeMessage = {
   role: "assistant",
@@ -25,7 +26,7 @@ export default function SupportChatPage() {
     setMessage("");
 
     try {
-      const response = await fetch("/api/chat/support", {
+      const response = await fetch(`${API_URL}/chat/support`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
