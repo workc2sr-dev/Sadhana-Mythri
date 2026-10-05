@@ -24,11 +24,11 @@ html {
 body {
   margin: 0;
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at top center, #bae3b4 45%, #d6ddd5 50%, #f6f0e5 100%);
+  /*background: radial-gradient(circle at top center, #b5d4b0 80%, #d6ddd5 10%, #f6f0e5 100%);*/
+  background-attachment: fixed;
   color: var(--deep);
-  font-family: "Inter",;
-  font-size: 17px;
+  font-family: "Inter", sans-serif;
+  font-size: 20px;
 }
 
 button,
@@ -250,7 +250,7 @@ a {
   grid-template-columns: 1fr auto auto;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 250, 242, 0.9);
+  background: rgb(253, 242, 218);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(56, 77, 63, 0.08);
   flex: 0 0 auto;
@@ -1164,9 +1164,9 @@ a {
 
 .plans-column {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 75px;
-  width: min(100%, 1200px);
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 80px;
+  width: min(100%, 900px);
   justify-self: center;
   align-self: start;
 }
@@ -1174,18 +1174,18 @@ a {
 /* The plans page presents all annual options side by side. */
 .plans-page-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: 32px;
-  width: min(100%, 1200px);
+  width: min(100%, 900px);
   margin: 0 auto;
   align-items: stretch;
 }
 
 .plan-card {
   position: relative;
-  background: palegoldenrod;
- /* border: 2px solid rgba(0, 0, 0, 0.8);*/
-  border-radius: 20px;
+  background: rgb(254, 249, 202);
+  border: 1px solid rgba(216, 210, 210, 0.8);
+  border-radius: 10px;
   padding: 50px 38px 38px;
   display: flex;
   flex-direction: column;
@@ -1193,8 +1193,8 @@ a {
 }
 
 .plan-card.featured {
-  border-color: rgba(0, 0, 0, 0.8);
-  box-shadow: 0 16px 36px rgba(195, 143, 69, 0.18);
+  border-color: rgba(216, 210, 210, 0.8);
+  /*box-shadow: 0 16px 36px rgba(195, 143, 69, 0.18);*/
 }
 
 .popular {
@@ -1203,8 +1203,8 @@ a {
   left: 50%;
   transform: translateX(-50%);
   background: var(--gold);
-  color: #030303;
-  border-radius: 5px;
+  color: #000000;
+  border-radius: 10px;
   padding: 6px 12px;
   font-size: 15px;
   font-weight: 900;
@@ -1212,7 +1212,7 @@ a {
 }
 
 .plan-note {
-  margin: 6px 0 8px;
+  margin: 4px 0 8px;
   font-size: 18px;
 }
 

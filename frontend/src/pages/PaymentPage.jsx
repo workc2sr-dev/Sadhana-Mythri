@@ -23,20 +23,24 @@ export default function PaymentPage() {
   const [hasBusinessDetails, setHasBusinessDetails] = useState(null);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || user?.is_admin) return;
     Promise.all([api.getVerification(), api.getBusinessDetails().catch(() => null)])
       .then(([verification, businessDetails]) => {
         setKycApproved(verification.status === "approved" && user?.account_status === "created");
         setHasBusinessDetails(Boolean(businessDetails));
       })
       .catch(() => { setKycApproved(false); setHasBusinessDetails(false); });
-  }, [isAuthenticated, user?.account_status]);
+  }, [isAuthenticated, user?.account_status, user?.is_admin]);
 
   if (!plan) {
     return <Navigate to="/plans" replace />;
   }
   if (!isAuthenticated) {
     return <Navigate to={`/auth?plan=${planId}`} replace />;
+  }
+  // Admins never need government ID verification, business details, or a plan.
+  if (user?.is_admin) {
+    return <Navigate to="/admin" replace />;
   }
   if (sessionStorage.getItem("sadhana_otp_verified") !== "true") {
     return <Navigate to={`/otp?plan=${planId}`} replace />;
