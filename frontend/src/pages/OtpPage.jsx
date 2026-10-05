@@ -24,7 +24,8 @@ export default function OtpPage() {
     sessionStorage.setItem("sadhana_otp_verified", "true");
     sessionStorage.removeItem("sadhana_otp");
 
-    if (!planId) { navigate(returnPath, { replace: true }); return; }
+    // Admins never need government ID verification or a plan.
+    if (!planId || user?.is_admin) { navigate(returnPath, { replace: true }); return; }
 
     // Customer/business details and KYC must be submitted and approved before a plan can go to payment.
     try {

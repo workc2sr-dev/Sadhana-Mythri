@@ -50,6 +50,8 @@ export default function PlansPage() {
 
   // Route the user to payment, documentation, or auth based on their plan/verification state
   const choosePlan = async (planId) => {
+    // Admins never need to select a plan.
+    if (isAuthenticated && user?.is_admin) { navigate("/admin"); return; }
     if (isAuthenticated) {
       try {
         const subscriptions = await api.getSubscriptions();

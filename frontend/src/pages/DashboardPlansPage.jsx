@@ -50,10 +50,12 @@ export default function DashboardPlansPage() {
 
   useEffect(() => {
     if (!isAuthenticated) { navigate("/auth", { replace: true }); return; }
+    // Admins never need government ID verification or a plan.
+    if (user?.is_admin) { navigate("/admin", { replace: true }); return; }
     refreshUser();
     loadVerification();
     loadSubscriptions();
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, user?.is_admin]);
 
   // Once KYC is approved and the account is created, resume the pending plan straight to payment.
   useEffect(() => {

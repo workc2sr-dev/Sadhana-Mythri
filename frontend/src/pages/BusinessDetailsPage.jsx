@@ -26,8 +26,10 @@ export default function BusinessDetailsPage() {
 
   useEffect(() => {
     if (!isAuthenticated) { navigate(`/auth${planId ? `?plan=${planId}` : ""}`, { replace: true }); return; }
+    // Admins never need to submit business details, government ID, or a plan.
+    if (user?.is_admin) { navigate("/admin", { replace: true }); return; }
     api.getBusinessDetails().then((details) => { if (details) setForm({ ...emptyForm, ...details }); }).catch(() => {});
-  }, [isAuthenticated, navigate, planId]);
+  }, [isAuthenticated, navigate, planId, user?.is_admin]);
 
   const isIndividual = user?.account_type !== "business";
   const update = (field) => (event) => setForm({ ...form, [field]: event.target.value });
