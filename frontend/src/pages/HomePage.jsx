@@ -196,7 +196,7 @@ export default function HomePage() {
         {
           role: "assistant",
           text:
-            "Sorry, I'm temporarily unavailable. Please contact our support team at +91 96325 87410 or info@sadhanamythri.com.",
+            "Sorry, I'm temporarily unavailable. Please contact our support team at +91 96325 87410 or info@we-hive.com.",
         },
       ]);
     }
@@ -278,14 +278,14 @@ export default function HomePage() {
               Admin Console
             </button>
           ) : (
-            <>
+            <div className="auth-stack">
               <button className="login-btn" onClick={() => navigate("/auth")}>
                 Login
               </button>
               <button className="signup-btn" onClick={() => navigate("/auth")}>
                 Sign Up
               </button>
-            </>
+            </div>
           )}
         </div>
       </header>
@@ -368,23 +368,27 @@ export default function HomePage() {
           <div className="floating-card floating-center">
             {/*<span className="mini-icon">🏢</span>*/}
             <p>
-              <u><strong>Easy Verification</strong></u>
+              <u><strong>HIGH-SPEED INTERNET</strong></u>
             </p>
           </div>
           <div className="floating-card floating-center">
             {/*<span className="mini-icon">🔐</span>*/}
             <p>
-              <u><strong>Privacy Assured</strong></u>
+              <u><strong>PRIVACY ASSURED WITH 24/7 SECURITY</strong></u>
             </p>
           </div>
 
           <div className="floating-card floating-center">
             {/*<span className="mini-icon">A</span>*/}
-            <u><strong>Business Address for you</strong></u>
+            <p>
+              <u><strong>PROFESSIONAL BUSINESS ADDRESS</strong></u>
+            </p>
           </div>
           <div className="floating-card floating-center">
             {/*<span className="mini-icon">M</span>*/}
-            <u><strong>Mail Handling</strong></u>
+            <p>
+              <u><strong>POWER BACKUP</strong></u>
+            </p>
           </div>
           </div>
 
@@ -544,7 +548,7 @@ export default function HomePage() {
         <div className="cta-content">
           <h2>Ready to establish your business presence?</h2>
           <p>
-            Join 1,000+ businesses who trust Sadhana Mythri for their virtual
+            Join 1,000+ businesses who trust WE-HIVE for their virtual
             office needs.
           </p>
           <button className="light-btn" onClick={() => navigate("/plans")}>
@@ -557,15 +561,37 @@ export default function HomePage() {
       <footer className="site-footer" id="contact">
         <div className="footer-main">
         <div className="footer-brand">
-          <strong>SADHANA MYTHRI</strong>
+          <strong>WE-HIVE</strong>
           <p>
           follow us on social media for updates and offers.
           </p>
           <div className="social-row">
-              <ul><span>f</span></ul>
-              <ul><span>in</span></ul>
-              <ul><span>ig</span></ul>
-              <ul><span>X</span></ul>
+              <a
+                href="https://www.facebook.com/profile.php?id=61594802775277"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Visit WE-HIVE on Facebook"
+              >
+                <span>f</span>
+              </a>
+              
+              <a
+                href="https://www.instagram.com/we_hive?stkn=NmVpYzRzdjYxa3Fx"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Visit WE-HIVE on Instagram"
+              >
+                <span>ig</span>
+              </a>
+              
+              <a
+                href="https://x.com/Wehive_2026"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Visit WE-HIVE on Twitter"
+              >
+                <span>X</span>
+              </a>
           </div>
         </div>
         <div className="footer-links">
@@ -633,15 +659,23 @@ export default function HomePage() {
             </button>
           </div>
         </div>*/}
+
         <div className="footer-contact">
-          <p>Contact Us:</p>
+          <p><b>Contact Us:</b></p>
           <div className="footer-contact-line">
             <a href="tel:+918904178434" aria-label="Call us">+91-8904178434</a>
             <span className="footer-divider" aria-hidden="true">||</span>
-            <a href="mailto:info@sadhanamythri.com">info@sadhanamythri.com</a>
+            <a href="mailto:info@we-hive.com">info@we-hive.com</a>
           </div>
         </div>
-        <div className="footer-note"><b>© 2026 Sadhana Mythri. All rights reserved. All content, trademarks, logos, software, and materials on this website are the exclusive property of Sadhana Mythri and may not be reproduced, distributed, or used without prior written permission.</b></div>
+        <div>----------------------------------------------------------------------------------------------------------------------------------------------------</div>
+        <div className="office-address-row"><b>OUR OFFICE ADDRESS:</b>
+          <br/>SADHANA MYTHRI PROPERTIES 
+          LLP 11-13-1377/2/410 Alkp Cly, Vsvi Cly, Ydv Ngr, 
+          Saroornagar, Saroornagar, Hyderabad, Hyderabad- 500035, 
+          Telangana, India</div>
+        <div>----------------------------------------------------------------------------------------------------------------------------------------------------</div>
+        <div className="footer-note"><b>© 2026 WE-HIVE. All rights reserved. All content, trademarks, logos, software, and materials on this website are the exclusive property of WE-HIVE and may not be reproduced, distributed, or used without prior written permission.</b></div>
         <div className="footer-made">Made with ♥ in India</div>
       </footer>
 
@@ -717,8 +751,8 @@ export default function HomePage() {
             <p className="support-chat-contact">
               Prefer to speak with our team?{" "}
               <a href="tel:+918904178434" aria-label="Call us">+91 8904178434</a> or{" "}
-              <a href="mailto:info@sadhanamythri.com">
-                info@sadhanamythri.com
+              <a href="mailto:info@we-hive.com">
+                info@we-hive.com
               </a>
             </p>
           </div>

@@ -419,7 +419,7 @@ async def support_chat(payload: SupportChatRequest):
         "reply": (
             "Thanks for reaching out. Our support team can help with account setup, plan questions, "
             "document verification, and general guidance. Please contact +91 8904178434 or "
-            "info@sadhanamythri.com for direct assistance."
+            "info@we-hive.com for direct assistance."
         )
     }
 

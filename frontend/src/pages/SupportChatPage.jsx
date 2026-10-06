@@ -50,7 +50,7 @@ export default function SupportChatPage() {
         {
           role: "assistant",
           text:
-            "Sorry, I’m temporarily unavailable. Please contact our support team at +91 96325 87410 or info@sadhanamythri.com.",
+            "Sorry, I’m temporarily unavailable. Please contact our support team at +91 96325 87410 or info@we-hive.com.",
         },
       ]);
     }
@@ -129,8 +129,8 @@ export default function SupportChatPage() {
           <p className="support-chat-contact">
             Prefer to speak with our team?{" "}
             <a href="tel:+918904178434" aria-label="Call us">+91 8904178434</a> or{" "}
-            <a href="mailto:info@sadhanamythri.com">
-              info@sadhanamythri.com
+            <a href="mailto:info@we-hive.com">
+              info@we-hive.com
             </a>
           </p>
         </section>
