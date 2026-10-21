@@ -12,7 +12,6 @@ const plans = [
     items: [
       "Official Business Address",
       "Mail & Document Handling",
-      "Standard Support",
     ],
   },
   {
@@ -23,8 +22,7 @@ const plans = [
     items: [
       "Official Business Address",
       "Mail & Document Handling",
-      "Priority Support",
-      "Dashboard Access",
+      "1 physical working space, access to 2-wheeler parking",
     ],
     featured: true,
   },
@@ -36,9 +34,8 @@ const plans = [
     items: [
       "Official Business Address",
       "Mail & Document Handling",
-      "Priority Support",
-      "Dashboard Access",
-      "Custom Requirements",
+      "2 physical working spaces",
+      "access to printer, conference room, reserved 2-wheeler parking",
     ],
   },
 ];
@@ -84,6 +81,7 @@ export default function PlansPage() {
           <div>
             <p className="hero-kicker">PLANS</p>
             <h1>Choose the plan that fits your business.</h1>
+            <h2><li>NOTE: The costs shown below are monthly rates, the plans will be billed annually.</li></h2>
           </div>
           <button className="secondary-btn" onClick={() => navigate("/")}>
             Back to home

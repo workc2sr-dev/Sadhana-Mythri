@@ -6,6 +6,7 @@ from fastapi import Request
 # Middleware that tags each response with a request ID and response time
 async def add_request_context(request: Request, call_next):
     request_id = request.headers.get("X-Request-ID", str(uuid4()))
+    request.state.request_id = request_id
     started_at = perf_counter()
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id

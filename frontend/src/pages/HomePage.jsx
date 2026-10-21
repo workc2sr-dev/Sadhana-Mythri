@@ -137,6 +137,7 @@ function CheckItem({ children }) {
 export default function HomePage() {
   const [notice, setNotice] = useState("");
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [infrastructurePlan, setInfrastructurePlan] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([{
@@ -170,7 +171,8 @@ export default function HomePage() {
     const nextMessages = [...messages, userMessage];
     setMessages(nextMessages);
     setMessage("");
-
+        /* chat system handling/calling the support endpoint */
+        /* Clear the message input and append the user's message to the chat history */
     try {
       const response = await fetch(`${API_URL}/chat/support`, {
         method: "POST",
@@ -212,8 +214,8 @@ export default function HomePage() {
     { label: "Logout", action: "logout" },
   ];
 
-  // Select a plan and route the user to auth, OTP, or plans based on their state
-  const choosePlan = async (plan) => {
+  // Route the user to auth, OTP, or plans based on their state
+  const continueWithPlan = async (plan) => {
     setNotice(`${plan.name} selected.`);
     if (isAuthenticated) {
       try {
@@ -237,6 +239,17 @@ export default function HomePage() {
     });
   };
 
+  // Show infrastructure details before continuing with any plan
+  const choosePlan = (plan) => {
+    setInfrastructurePlan(plan);
+  };
+
+  const confirmInfrastructurePlan = () => {
+    const plan = infrastructurePlan;
+    setInfrastructurePlan(null);
+    if (plan) continueWithPlan(plan);
+  };
+
   return (
     <main className={`landing home-page${isAuthenticated && !user?.is_admin ? " landing-authenticated" : ""}`}>
       <header className="site-header">
@@ -247,7 +260,7 @@ export default function HomePage() {
 
         <nav className="main-nav" aria-label="Primary">
           <a href="#solutions" onClick={() => scrollToSection("solutions")}>
-            Solutions <span>⌄</span>
+            Solutions
           </a>
           <a href="#plans" onClick={() => navigate("/plans")}>
             Plans
@@ -299,6 +312,63 @@ export default function HomePage() {
         onConfirm={signOut}
         onCancel={() => setLogoutOpen(false)}
       />
+
+      {infrastructurePlan && (
+        <div
+          className="infrastructure-modal-backdrop"
+          onClick={() => setInfrastructurePlan(null)}
+        >
+          <div
+            className="infrastructure-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="infrastructure-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="infrastructure-modal-header">
+              <div>
+                <p className="infrastructure-modal-eyebrow">PLAN INFRASTRUCTURE</p>
+                <h2 id="infrastructure-modal-title">
+                  {infrastructurePlan.name}
+                </h2>
+              </div>
+              <button
+                className="chat-modal-close"
+                type="button"
+                aria-label="Close infrastructure details"
+                onClick={() => setInfrastructurePlan(null)}
+              >
+                ×
+              </button>
+            </div>
+            <p className="infrastructure-modal-copy">
+              This is the infrastructure and service included with your selected
+              plan:
+            </p>
+            <ul className="infrastructure-modal-list">
+              {infrastructurePlan.items.map((item) => (
+                <CheckItem key={item}>{item}</CheckItem>
+              ))}
+            </ul>
+            <div className="infrastructure-modal-actions">
+              <button
+                className="secondary-btn"
+                type="button"
+                onClick={() => setInfrastructurePlan(null)}
+              >
+                Back to plans
+              </button>
+              <button
+                className="primary-btn"
+                type="button"
+                onClick={confirmInfrastructurePlan}
+              >
+                Continue with {infrastructurePlan.name}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isAuthenticated && !user?.is_admin && (
         <div className="landing-account-toolbar" aria-label="Account navigation">
@@ -477,32 +547,37 @@ export default function HomePage() {
       {/* How the pricing works */}
       <section className="pricing-area" id="plans">
         <div className="plans-column">
-          {plans.map((plan) => (
-            <article
-              key={plan.name}
-              className={`plan-card ${plan.featured ? "featured" : ""}`}
-            >
-              {plan.featured && <span className="popular">MOST POPULAR</span>}
-              <h3><strong>{plan.name}</strong></h3>
-              <p className="plan-note">{plan.note}</p>
-              <p className="plan-price">
-                <span>₹</span>
-                {plan.price.toLocaleString("en-IN")}
-                <small> /month (billed annually)</small>
-              </p>
-              <ul>
-                {plan.items.map((item) => (
-                  <CheckItem key={item}>{item}</CheckItem>
-                ))}
-              </ul>
-              <button
-                className={plan.featured ? "primary-btn" : "secondary-btn"}
-                onClick={() => choosePlan(plan)}
+          <p className="plan-selection-prompt">
+            Which infrastructure fits your business?
+          </p>
+          <div className="plan-options">
+            {plans.map((plan) => (
+              <article
+                key={plan.name}
+                className={`plan-card ${plan.featured ? "featured" : ""}`}
               >
-                Subscribe Now
-              </button>
-            </article>
-          ))}
+                {plan.featured && <span className="popular">MOST POPULAR</span>}
+                <h3><strong>{plan.name}</strong></h3>
+                <p className="plan-note">{plan.note}</p>
+                <p className="plan-price">
+                  <span>₹</span>
+                  {plan.price.toLocaleString("en-IN")}
+                  <small> /month (billed annually)</small>
+                </p>
+                <ul>
+                  {plan.items.map((item) => (
+                    <CheckItem key={item}>{item}</CheckItem>
+                  ))}
+                </ul>
+                <button
+                  className={plan.featured ? "primary-btn" : "secondary-btn"}
+                  onClick={() => choosePlan(plan)}
+                >
+                  Subscribe Now
+                </button>
+              </article>
+            ))}
+          </div>
         </div>
 
         <div className="testimonials-column" id="about">
