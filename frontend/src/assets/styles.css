@@ -184,7 +184,8 @@ a {
   font-size: 14px;
 }
 
-.auth-form input {
+.auth-form input,
+.auth-form select {
   border: 1px solid #cbd6d0;
   border-radius: 4px;
   padding: 12px;

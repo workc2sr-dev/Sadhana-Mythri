@@ -66,8 +66,16 @@ export default function AdminDashboard() {
   const reviewVerification = async (verificationId, reviewStatus) => {
     setError("");
     try {
+      const reviewed = verifications.find((verification) => verification.id === verificationId);
       const updated = await api.reviewVerification(verificationId, reviewStatus);
       setVerifications((current) => current.map((verification) => verification.id === updated.id ? { ...verification, ...updated } : verification));
+      if (reviewed) {
+        setUsers((current) => current.map((account) =>
+          account.id === reviewed.user_id
+            ? { ...account, account_status: reviewStatus === "approved" ? "created" : "under_review" }
+            : account,
+        ));
+      }
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -111,11 +119,33 @@ export default function AdminDashboard() {
       <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">QUICK ACCESS</p><h2>Operational modules</h2></div></div><div className="admin-shortcuts">{sections.slice(1).map((section) => <button key={section} onClick={() => setTab(section)}>{section}<span>→</span></button>)}</div></section>
     </>;
 
-    if (tab === "Users") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">USERS</p><h2>Account directory</h2></div><span>{number(users.length)} accounts</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Type</th><th>Role</th><th>Step</th><th>Action</th></tr></thead><tbody>{users.map((account) => <tr key={account.id}><td>{account.full_name}</td><td>{account.email}</td><td>{account.account_type === "business" ? "Business" : "Individual"}</td><td><span className={`role-chip ${account.is_admin ? "role-admin" : ""}`}>{account.is_admin ? "Administrator" : "User"}</span></td><td><span className={`kyc-status ${account.account_status === "created" ? "kyc-approved" : ""}`}>{account.account_status === "created" ? "Created" : "Under review"}</span></td><td>{account.is_admin ? "Protected" : <button className="delete-user-btn" onClick={() => deleteUser(account)}>Delete</button>}</td></tr>)}</tbody></table></div>}</section>;
+    if (tab === "Users") return <section className="admin-card">
+      <div className="admin-card-heading"><div><p className="eyebrow">USERS</p><h2>Account directory</h2></div><span>{number(users.length)} accounts</span></div>
+      {error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Type</th><th>Role</th><th>Step</th><th>Verification review</th><th>Action</th></tr></thead>
+        <tbody>{users.map((account) => {
+          const verification = verifications.find((item) => item.user_id === account.id);
+          const canReview = account.account_type === "individual" && verification?.status === "pending";
+          return <tr key={account.id}>
+            <td>{account.full_name}</td>
+            <td>{account.email}</td>
+            <td>{account.account_type === "business" ? "Business" : "Individual"}</td>
+            <td><span className={`role-chip ${account.is_admin ? "role-admin" : ""}`}>{account.is_admin ? "Administrator" : "User"}</span></td>
+            <td><span className={`kyc-status ${account.account_status === "created" ? "kyc-approved" : ""}`}>{account.account_status === "created" ? "Created" : "Under review"}</span></td>
+            <td>{canReview ? <div className="review-actions">
+              <button className="text-btn" onClick={() => viewVerification(verification.id)}>View ID</button>
+              <button className="primary-btn" onClick={() => reviewVerification(verification.id, "approved")}>Accept</button>
+              <button className="secondary-btn" onClick={() => reviewVerification(verification.id, "declined")}>Reject</button>
+            </div> : verification ? <span className={`kyc-status kyc-${verification.status}`}>{verification.status}</span> : "ID not submitted"}</td>
+            <td>{account.is_admin ? "Protected" : <button className="delete-user-btn" onClick={() => deleteUser(account)}>Delete</button>}</td>
+          </tr>;
+        })}</tbody>
+      </table></div>}
+    </section>;
 
     if (tab === "Plans") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">PLANS</p><h2>Service catalogue</h2></div></div><div className="admin-plan-grid">{plans.map((plan) => <article key={plan.id}><p>{plan.id}</p><h3>{plan.name}</h3><strong>₹{number(plan.price)}</strong><span>{plan.workspace_days} workspace days</span></article>)}</div></section>;
 
-    if (tab === "Documents") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">KYC DOCUMENTS</p><h2>Government ID reviews</h2></div><span>{number(verifications.filter((verification) => verification.status === "pending").length)} pending</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>User</th><th>Government ID</th><th>Status</th><th>Decision</th></tr></thead><tbody>{verifications.length ? verifications.map((verification) => <tr key={verification.id}><td><strong>{verification.user_name}</strong><br /><span>{verification.user_email}</span></td><td>{verification.document_type}<br /><span>{verification.document_name}</span><button className="text-btn" onClick={() => viewVerification(verification.id)}>View ID</button></td><td><span className={`kyc-status kyc-${verification.status}`}>{verification.status}</span></td><td>{verification.status === "pending" ? <div className="review-actions"><button className="primary-btn" onClick={() => reviewVerification(verification.id, "approved")}>Accept</button><button className="secondary-btn" onClick={() => reviewVerification(verification.id, "declined")}>Decline</button></div> : "Reviewed"}</td></tr>) : <tr><td colSpan="4">No government IDs have been submitted.</td></tr>}</tbody></table></div>}</section>;
+    if (tab === "Documents") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">KYC DOCUMENTS</p><h2>Government ID reviews</h2></div><span>{number(verifications.filter((verification) => verification.status === "pending").length)} pending</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>User</th><th>Account type</th><th>Government ID</th><th>Status</th><th>Decision</th></tr></thead><tbody>{verifications.length ? verifications.map((verification) => <tr key={verification.id}><td><strong>{verification.user_name}</strong><br /><span>{verification.user_email}</span></td><td>{verification.account_type === "business" ? "Business" : "Individual"}</td><td>{verification.document_type}<br /><span>{verification.document_name}</span><button className="text-btn" onClick={() => viewVerification(verification.id)}>View ID</button></td><td><span className={`kyc-status kyc-${verification.status}`}>{verification.status}</span></td><td>{verification.status === "pending" ? <div className="review-actions"><button className="primary-btn" onClick={() => reviewVerification(verification.id, "approved")}>Accept</button><button className="secondary-btn" onClick={() => reviewVerification(verification.id, "declined")}>Decline</button></div> : "Reviewed"}</td></tr>) : <tr><td colSpan="5">No government IDs have been submitted.</td></tr>}</tbody></table></div>}</section>;
 
     if (tab === "Subscriptions") return <section className="admin-card"><div className="admin-card-heading"><div><p className="eyebrow">SUBSCRIPTIONS</p><h2>Subscription operations</h2></div><span>{number(subscriptions.length)} total</span></div>{error ? <p className="form-error">{error}</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>User</th><th>Plan</th><th>Status</th><th>Expires</th></tr></thead><tbody>{subscriptions.length ? subscriptions.map((subscription) => <tr key={subscription.id}><td><strong>{subscription.user_name}</strong><br /><span>{subscription.user_email}</span></td><td>{subscription.plan_id}</td><td><span className={`kyc-status kyc-${subscription.status}`}>{subscription.status.replaceAll("_", " ")}</span></td><td>{subscription.expires_at ? new Date(subscription.expires_at).toLocaleDateString("en-IN") : "—"}</td></tr>) : <tr><td colSpan="4">No subscriptions yet.</td></tr>}</tbody></table></div>}</section>;
 
