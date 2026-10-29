@@ -34,6 +34,9 @@ with engine.begin() as connection:
         text("ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) DEFAULT 'individual'")
     )
     connection.execute(
+        text("ALTER TABLE users ADD COLUMN IF NOT EXISTS account_status VARCHAR(30) DEFAULT 'under_review'")
+    )
+    connection.execute(
         text("ALTER TABLE verifications ADD COLUMN IF NOT EXISTS document_content_type VARCHAR(100)")
     )
     connection.execute(

@@ -355,6 +355,7 @@ def admin_verifications(_: User = Depends(get_admin_user), db: Session = Depends
             user_id=account.id,
             user_name=account.full_name,
             user_email=account.email,
+            account_type=account.account_type,
             document_type=verification.document_type,
             document_name=verification.document_name,
             status=verification.status,

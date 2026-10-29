@@ -135,3 +135,4 @@ class AdminVerificationResponse(VerificationResponse):
     user_id: int
     user_name: str
     user_email: EmailStr
+    account_type: str = "individual"
