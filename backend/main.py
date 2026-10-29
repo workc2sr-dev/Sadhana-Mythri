@@ -4,6 +4,7 @@ from app.database.connection import Base, engine
 from app.api.routes import router
 from app.middleware.request_context import add_request_context
 from app.utils.config import settings
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
@@ -13,17 +14,31 @@ from sqlalchemy import text
 
 logger = logging.getLogger(__name__)
 
+# Create missing database tables
 Base.metadata.create_all(bind=engine)
 
-# create_all only creates missing tables; new columns on pre-existing tables need explicit migration.
+# Add missing columns to existing tables
 blob_type = "BYTEA" if engine.dialect.name == "postgresql" else "LONGBLOB"
+
 with engine.begin() as connection:
-    connection.execute(text("ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP"))
-    connection.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS subscription_id INTEGER"))
-    connection.execute(text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS plan_id VARCHAR(30)"))
-    connection.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) DEFAULT 'individual'"))
-    connection.execute(text("ALTER TABLE verifications ADD COLUMN IF NOT EXISTS document_content_type VARCHAR(100)"))
-    connection.execute(text(f"ALTER TABLE verifications ADD COLUMN IF NOT EXISTS document_data {blob_type}"))
+    connection.execute(
+        text("ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP")
+    )
+    connection.execute(
+        text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS subscription_id INTEGER")
+    )
+    connection.execute(
+        text("ALTER TABLE invoices ADD COLUMN IF NOT EXISTS plan_id VARCHAR(30)")
+    )
+    connection.execute(
+        text("ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type VARCHAR(20) DEFAULT 'individual'")
+    )
+    connection.execute(
+        text("ALTER TABLE verifications ADD COLUMN IF NOT EXISTS document_content_type VARCHAR(100)")
+    )
+    connection.execute(
+        text(f"ALTER TABLE verifications ADD COLUMN IF NOT EXISTS document_data {blob_type}")
+    )
 
 app = FastAPI(title="Sadhana Mythri API", version="0.1.0")
 
@@ -58,7 +73,9 @@ async def handle_http_error(request: Request, exc: StarletteHTTPException):
             else "The request could not be completed.",
         ),
     )
+
     request_id = getattr(request.state, "request_id", "unknown")
+
     logger.warning(
         "HTTP error request_id=%s status=%s method=%s path=%s detail=%r",
         request_id,
@@ -67,16 +84,21 @@ async def handle_http_error(request: Request, exc: StarletteHTTPException):
         request.url.path,
         exc.detail,
     )
-    return error_response(exc.status_code, code, message, exc.headers)
+
+    return error_response(
+        exc.status_code, code, message, exc.headers
+    )
 
 
 @app.exception_handler(RequestValidationError)
 async def handle_validation_error(request: Request, exc: RequestValidationError):
     request_id = getattr(request.state, "request_id", "unknown")
+
     invalid_fields = [
         {"location": error["loc"], "type": error["type"]}
         for error in exc.errors()
     ]
+
     logger.warning(
         "Request validation error request_id=%s method=%s path=%s invalid_fields=%s",
         request_id,
@@ -84,6 +106,7 @@ async def handle_validation_error(request: Request, exc: RequestValidationError)
         request.url.path,
         invalid_fields,
     )
+
     code, message = ERROR_RESPONSES[422]
     return error_response(422, code, message)
 
@@ -91,12 +114,14 @@ async def handle_validation_error(request: Request, exc: RequestValidationError)
 @app.exception_handler(Exception)
 async def handle_unexpected_error(request: Request, exc: Exception):
     request_id = getattr(request.state, "request_id", "unknown")
+
     logger.exception(
         "Unhandled error request_id=%s method=%s path=%s",
         request_id,
         request.method,
         request.url.path,
     )
+
     return error_response(
         500,
         "INTERNAL_ERROR",
@@ -111,11 +136,41 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 app.middleware("http")(add_request_context)
 app.include_router(router, prefix="/api")
 
 
-# Simple liveness endpoint used to verify the API is running
+# Basic API health check
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "service": "sadhana-mythri-api"}
+    return {
+        "status": "ok",
+        "service": "sadhana-mythri-api",
+    }
+
+
+# Database connectivity health check
+@app.get("/health/db")
+def database_health_check():
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+
+        return {
+            "status": "ok",
+            "service": "sadhana-mythri-api",
+            "database": "connected",
+        }
+
+    except Exception:
+        logger.exception("Database health check failed")
+
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "error",
+                "service": "sadhana-mythri-api",
+                "database": "unavailable",
+            },
+        )
